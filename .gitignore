@@ -3,5 +3,6 @@
 /node_modules/
 /writable/cache/*
 /writable/logs/*
+/writable/debugbar/*.json
 /writable/session/*
 .DS_Storegit status
