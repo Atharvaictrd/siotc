@@ -11,7 +11,7 @@ use CodeIgniter\Router\RouteCollection;
     $routes->get('/cron_todays_collection', 'CronController::cron_todays_collection');
     $routes->get('/cron_todays_enquiry', 'CronController::cron_todays_enquiry');
     $routes->post('/loginsubmit', 'Admin::loginsubmit', ['as' => 'admin.loginsubmit']);
-    $routes->group('', ['filter' => 'isAdminLoggedin'], function ($routes) {
+    $routes->group('', ['filter' => ['isAdminLoggedin', 'moduleViewPermission']], function ($routes) {
     $routes->match(['get','post'],'/dashboard', 'Admin::dashboard', ['as' => 'dashboard']);
     $routes->match(['get','post'],'/regenerateSession', 'Admin::regenerateSession', ['as' => 'regenerateSession']);
     // $routes->get('/dashboard', 'Admin::dashboard', ['as' => 'dashboard']);
@@ -44,14 +44,19 @@ use CodeIgniter\Router\RouteCollection;
     $routes->match(['get','post'],'/enquiry_medium', 'EnquiryController::enquiry_medium', ['as' => 'enquiry_medium']);
     $routes->match(['get','post'],'/enquiry_reference', 'EnquiryController::enquiry_reference', ['as' => 'enquiry_reference']);
     $routes->get('/bulk_sms', 'EnquiryController::bulk_sms', ['as' => 'bulk_sms']);
-    $routes->match(['get','post'],'/create_user', 'Admin::create_user', ['as' => 'create_user']);
+    $routes->match(['get','post'],'/create_user', 'Admin::create_user', [
+        'as' => 'create_user',
+        'filter' => ['isAdminLoggedin', 'isSuperAdmin']
+    ]);
     $routes->match(['get','post'],'/update_password', 'Admin::update_password', ['as' => 'update_password']);
-    $routes->post('/save_user', 'Admin::save_user');
+    $routes->post('/save_user', 'Admin::save_user', [
+        'filter' => ['isAdminLoggedin', 'isSuperAdmin']
+    ]);
     $routes->get('/permission_panel', 'Admin::permission_panel', ['as' => 'permission_panel']);
     $routes->get('/permission-panel', 'Admin::permission_panel1', ['as' => 'permission-panel']);
-    $routes->get('/edit_user/(:num)', 'UserController::edit_user/$1');
-    $routes->post('/update_user/(:num)', 'UserController::update_user/$1');
-    $routes->get('/delete_user/(:num)', 'UserController::delete_user/$1');
+    // $routes->get('/edit_user/(:num)', 'UserController::edit_user/$1');
+    // $routes->post('/update_user/(:num)', 'UserController::update_user/$1');
+    // $routes->get('/delete_user/(:num)', 'UserController::delete_user/$1');
     //HrManagement
     $routes->get('/add_teacher', 'HrController::add_teacher');
     $routes->get('/hr_management', 'HrController::hr_management');
@@ -95,7 +100,7 @@ use CodeIgniter\Router\RouteCollection;
     //Fees
     $routes->get('/fees_report', 'Admin::fees_report', [
         'as' => 'fees_report',
-        'filter' => 'moduleViewPermission'
+        'filter' => ['isAdminLoggedin', 'moduleViewPermission']
     ]);
     $routes->get('/fees_report/program', 'Admin::fees_program', ['as' => 'fees_program']);   
     $routes->get('/fees_report/scholarship', 'Admin::fees_scholarship', ['as' => 'fees_scholarship']);
@@ -328,12 +333,25 @@ use CodeIgniter\Router\RouteCollection;
     $routes->match(['get','post'],'/delete_management/(:num)', 'DeleteController::delete_management/$1');
 
     //new routes
+$routes->group('', ['filter' => ['isAdminLoggedin', 'isSuperAdmin']], function ($routes) {
 $routes->get('/create_role', 'Admin::create_role');
 $routes->post('/save_role', 'Admin::save_role');
 $routes->post('/save-role-permissions', 'Admin::save_role_permissions');
-
+$routes->post('save_user', 'Admin::save_user');
+$routes->get('get_role_permissions', 'Admin::get_role_permissions');
+$routes->get('edit_user/(:num)', 'Admin::edit_user/$1');
+$routes->get('manage_user_permissions/(:num)', 'Admin::manage_user_permissions/$1');
+$routes->post('update_user/(:num)', 'Admin::update_user/$1');
+$routes->post('update_user_permissions/(:num)', 'Admin::update_user_permissions/$1');
+$routes->post('delete_user/(:num)', 'Admin::delete_user/$1');
+$routes->post('update_user/(:num)', 'Admin::update_user/$1');
+$routes->post('delete_user/(:num)', 'Admin::delete_user/$1');
 $routes->get('create_menu', 'Admin::create_menu');
-$routes->post('save_menu', 'Admin::save_menu');
+$routes->post('save_custom_menu', 'Admin::save_custom_menu');
+$routes->get('edit_custom_menu/(:num)', 'Admin::edit_custom_menu/$1');
+$routes->post('update_custom_menu/(:num)', 'Admin::update_custom_menu/$1');
+$routes->post('delete_custom_menu/(:num)', 'Admin::delete_custom_menu/$1');
+});
 });
 
 

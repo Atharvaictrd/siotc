@@ -163,44 +163,10 @@ body{
 <?php
 $db = \Config\Database::connect();
 $adminId = session()->get('adminloggedid');
-$assignedRoles = [];
-
-if ($adminId !== null && $adminId !== '') {
-    $assignedRoles = $db->table('user_roles')
-        ->select('roles.role_id, roles.role_name')
-        ->join('roles', 'roles.role_id = user_roles.role_id')
-        ->where('user_roles.user_id', $adminId)
-        ->where('roles.status', 1)
-        ->get()
-        ->getResultArray();
-}
-
-$roleIds = array_values(array_unique(array_column($assignedRoles, 'role_id')));
-$isSuperAdmin = false;
-
-foreach ($assignedRoles as $role) {
-    $normalizedRoleName = strtolower(preg_replace('/[\s_-]+/', '', (string) ($role['role_name'] ?? '')));
-    if ($normalizedRoleName === 'superadmin') {
-        $isSuperAdmin = true;
-        break;
-    }
-}
-
-$viewModuleIds = [];
-if ($roleIds !== []) {
-    $rolePermissions = $db->table('role_permissions')
-        ->select('permissions.module_id, permissions.action_name')
-        ->join('permissions', 'permissions.permission_id = role_permissions.permission_id')
-        ->whereIn('role_permissions.role_id', $roleIds)
-        ->get()
-        ->getResultArray();
-
-    foreach ($rolePermissions as $permission) {
-        if (strtolower(trim((string) ($permission['action_name'] ?? ''))) === 'view') {
-            $viewModuleIds[(string) $permission['module_id']] = true;
-        }
-    }
-}
+$permissionContext = (new \App\Libraries\PermissionService($db))
+    ->getPermissionContext($adminId);
+$isSuperAdmin = $permissionContext['is_super_admin'];
+$effectivePermissions = $permissionContext['permissions'];
 
 $activeModules = $db->table('modules')
     ->select('module_id, parent_id, module_name, module_key, route, icon, sort_order, is_menu, status')
@@ -220,7 +186,7 @@ foreach ($activeModules as $module) {
 }
 
 $currentUrl = rtrim(current_url(), '/');
-$renderMenu = function ($parentId, $depth = 0) use (&$renderMenu, $modulesByParent, $viewModuleIds, $isSuperAdmin, $currentUrl) {
+$renderMenu = function ($parentId, $depth = 0) use (&$renderMenu, $modulesByParent, $effectivePermissions, $isSuperAdmin, $currentUrl) {
     $parentKey = (string) $parentId;
     if ($parentKey === '0') {
         $parentKey = '';
@@ -237,7 +203,9 @@ $renderMenu = function ($parentId, $depth = 0) use (&$renderMenu, $modulesByPare
 
         $route = trim((string) ($module['route'] ?? ''));
         $routeUrl = $route !== '' ? base_url(ltrim($route, '/')) : '';
-        $canView = $isSuperAdmin || isset($viewModuleIds[$moduleId]);
+        $moduleKey = (string) ($module['module_key'] ?? '');
+        $canView = $isSuperAdmin
+            || (($effectivePermissions[$moduleKey]['view'] ?? false) === true);
         $hasAccessiblePage = (int) ($module['is_menu'] ?? 0) === 1 && $canView && $routeUrl !== '';
 
         if (!$hasAccessibleChildren && !$hasAccessiblePage) {
@@ -295,6 +263,158 @@ $renderMenu = function ($parentId, $depth = 0) use (&$renderMenu, $modulesByPare
 };
 
 $renderMenu('');
+
+// =====================================
+// USER-SPECIFIC CUSTOM SIDEBAR MENUS
+// =====================================
+
+$loggedInUserId = (int) session()->get('adminloggedid');
+
+$customMenus = $db->table('user_custom_menus')
+    ->where('user_id', $loggedInUserId)
+    ->where('status', 1)
+    ->orderBy('sort_order', 'ASC')
+    ->orderBy('menu_id', 'ASC')
+    ->get()
+    ->getResultArray();
+
+// Organize menus by parent
+$customMenusByParent = [];
+
+foreach ($customMenus as $menu) {
+    $parentId = (string) ($menu['parent_id'] ?? '');
+
+    if ($parentId === '0') {
+        $parentId = '';
+    }
+
+    $customMenusByParent[$parentId][] = $menu;
+}
+
+// Recursive custom menu renderer
+$renderCustomMenu = function ($parentId = '') use (
+    &$renderCustomMenu,
+    $customMenusByParent,
+    $currentUrl
+) {
+    $parentKey = (string) $parentId;
+
+    if ($parentKey === '0') {
+        $parentKey = '';
+    }
+
+    $activeAtThisLevel = false;
+
+    foreach ($customMenusByParent[$parentKey] ?? [] as $menu) {
+
+        $menuId = (string) $menu['menu_id'];
+
+        // Render child menus first
+        ob_start();
+        $childrenActive = $renderCustomMenu($menuId);
+        $childrenHtml = ob_get_clean();
+
+        $hasChildren = trim($childrenHtml) !== '';
+
+        $route = trim((string) ($menu['route'] ?? ''));
+        $routeUrl = $route !== ''
+            ? base_url(ltrim($route, '/'))
+            : '';
+
+        $hasPage = (int) $menu['is_menu'] === 1
+            && $routeUrl !== '';
+
+        if (!$hasPage && !$hasChildren) {
+            continue;
+        }
+
+        $isCurrentPage = $hasPage
+            && rtrim($routeUrl, '/') === $currentUrl;
+
+        $isActive = $isCurrentPage || $childrenActive;
+
+        $icon = trim((string) ($menu['icon'] ?? ''));
+
+        if ($hasChildren) {
+
+            echo '<div class="menu-item has-sub'
+                . ($isActive ? ' active' : '') . '">';
+
+            echo '<a href="javascript:;" class="menu-link">';
+
+            echo '<div class="menu-icon">';
+            if ($icon !== '') {
+                echo '<i class="' . esc($icon, 'attr') . '"></i>';
+            }
+            echo '</div>';
+
+            echo '<div class="menu-text">'
+                . esc($menu['menu_name'], 'html')
+                . '</div>';
+
+            echo '<div class="menu-caret"></div>';
+
+            echo '</a>';
+
+            echo '<div class="menu-submenu'
+                . ($isActive ? ' active' : '') . '">';
+
+            if ($hasPage) {
+                echo '<div class="menu-item'
+                    . ($isCurrentPage ? ' active' : '') . '">';
+
+                echo '<a href="' . esc($routeUrl, 'attr')
+                    . '" class="menu-link">';
+
+                echo '<div class="menu-text">'
+                    . esc($menu['menu_name'], 'html')
+                    . '</div>';
+
+                echo '</a>';
+                echo '</div>';
+            }
+
+            echo $childrenHtml;
+
+            echo '</div>';
+            echo '</div>';
+
+        } else {
+
+            echo '<div class="menu-item'
+                . ($isCurrentPage ? ' active' : '') . '">';
+
+            echo '<a href="' . esc($routeUrl, 'attr')
+                . '" class="menu-link">';
+
+            echo '<div class="menu-icon">';
+
+            if ($icon !== '') {
+                echo '<i class="' . esc($icon, 'attr') . '"></i>';
+            }
+
+            echo '</div>';
+
+            echo '<div class="menu-text">'
+                . esc($menu['menu_name'], 'html')
+                . '</div>';
+
+            echo '</a>';
+            echo '</div>';
+        }
+
+        $activeAtThisLevel = $activeAtThisLevel || $isActive;
+    }
+
+    return $activeAtThisLevel;
+};
+
+// Display custom menus
+if (!empty($customMenus)) {
+    echo '<div class="menu-header">My Custom Menus</div>';
+    $renderCustomMenu('');
+}
+
 ?>
 
 <?php if (false): ?>

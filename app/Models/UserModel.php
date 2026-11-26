@@ -6,97 +6,82 @@ use CodeIgniter\Model;
 
 class UserModel extends Model
 {
-	protected $DBGroup              = 'default';
-	protected $table                = 'user';
-	protected $primaryKey           = 'id';
-	protected $useAutoIncrement     = true;
-	protected $insertID             = 0;
-	protected $returnType           = 'array';
-// 	protected $useSoftDeletes       = true;
-	protected $protectFields        = true;
-	protected $allowedFields        = [
-		'user_name',
-		'emp_id',
-		'password',
-	];
+    protected $DBGroup          = 'default';
+    protected $table            = 'user';
+    protected $primaryKey       = 'user_id';
+    protected $useAutoIncrement = true;
+    protected $returnType       = 'array';
 
-	// Dates
-// 	protected $useTimestamps        = true;
-// 	protected $dateFormat           = 'datetime';
-// 	protected $createdField         = 'created_at';
-// 	protected $updatedField         = 'updated_at';
-// 	protected $deletedField         = 'deleted_at';
+    protected $protectFields = true;
 
-	// Validation
-	protected $validationRules      = [
-		'user_name'  => 'required',
-		'password' => 'required',
-	];
+    protected $allowedFields = [
+        'user_name',
+        'full_name',
+        'emp_id',
+        'email',
+        'mobile',
+        'address',
+        'password',
+        'last_modify_date'
+    ];
 
-	protected $validationMessages   = [
-		'user_name' => [
-			'required' => '{field} is required',
-		],
-		'password' => [
-			'required' => '{field} is required',
-		],
-	];
-	protected $skipValidation       = false;
-	protected $cleanValidationRules = true;
+    // Validation
+    protected $validationRules = [
+        'user_name' => 'required',
+        'password'  => 'required'
+    ];
 
-	// Callbacks
-	protected $allowCallbacks       = true;
-	protected $beforeInsert         = [];
-	protected $afterInsert          = [];
-	protected $beforeUpdate         = [];
-	protected $afterUpdate          = [];
-	protected $beforeFind           = [];
-	protected $afterFind            = [];
-	protected $beforeDelete         = [];
-	protected $afterDelete          = [];
+    protected $validationMessages = [
+        'user_name' => [
+            'required' => 'Username is required'
+        ],
+        'password' => [
+            'required' => 'Password is required'
+        ]
+    ];
 
-	public function fetch_all()
-	{
-		return $this->findAll();
-	}
+    // Existing project uses manual date handling
+    protected $useTimestamps = false;
 
-	public function fetch_row($id)
-	{
-		return $this->find($id);
-	}
+    public function fetch_all()
+    {
+        return $this->findAll();
+    }
 
-	public function create($data)
-	{
-		if ($this->save($data)) {
-			if ($this->insertID != 0) {
-				return $this->insertID;
-			} else {
-				$data['error'] = $this->errors();
-				return $data;
-			}
-		} else {
-			$data['error'] = $this->errors();
-			return $data;
-		}
-	}
+    public function fetch_row($id)
+    {
+        return $this->find($id);
+    }
 
-	public function update_row($id, $data)
-	{
-		if ($this->update($id, $data)) {
-			return true;
-		} else {
-			$data['error'] = $this->errors();
-			return $data;
-		}
-	}
+    public function create($data)
+    {
+        if ($this->insert($data)) {
+            return $this->getInsertID();
+        }
 
-	public function delete_row($id)
-	{
-		return $this->delete($id);
-	}
-	public function fetch_single_user($id){
-	    $db = \Config\Database::connect();
-        $query=$db->query("SELECT * FROM user WHERE user_id='$id'");
-        return $query->getResult();
-	}
+        return [
+            'error' => $this->errors()
+        ];
+    }
+
+    public function update_row($id, $data)
+    {
+        if ($this->update($id, $data)) {
+            return true;
+        }
+
+        return [
+            'error' => $this->errors()
+        ];
+    }
+
+    public function delete_row($id)
+    {
+        return $this->delete($id);
+    }
+
+    public function fetch_single_user($id)
+    {
+        return $this->where('user_id', $id)->findAll();
+    }
 }
