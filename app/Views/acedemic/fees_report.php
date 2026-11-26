@@ -46,51 +46,70 @@
 </thead>
 <tbody>
 
-<!--<tr class="odd gradeX">-->
-<!--<td>1</td>-->
-<!--<td> 	Program Fees Structure</td>-->
-<!--<td><a href="<?=base_url();?>fees_report/program" class="btn btn-xl btn-warning">View</a></td>-->
-<!--</tr>-->
-<tr class="odd gradeX">
-<td>1</td>
-<td> Scholarship Section</td>
-<td><a href="<?=base_url();?>fees_report/scholarship" class="btn btn-xl btn-warning">View</a></td>
+<?php if (!empty($allowedFeesPages['scholarship_section'])): ?>
+<tr>
+    <td>1</td>
+    <td>Scholarship Section</td>
+    <td><a href="<?= base_url('fees_report/scholarship') ?>" class="btn btn-xl btn-warning">View</a></td>
 </tr>
-<tr class="odd gradeX">
-<td>2</td>
-<td> Fees Collection</td>
-<td><a href="<?=base_url();?>fees_report/fees" class="btn btn-xl btn-warning">View</a></td>
+<?php endif; ?>
+
+<?php if (!empty($allowedFeesPages['fees_collection'])): ?>
+<tr>
+    <td>2</td>
+    <td>Fees Collection</td>
+    <td><a href="<?= base_url('fees_report/fees') ?>" class="btn btn-xl btn-warning">View</a></td>
 </tr>
-<tr class="odd gradeX">
-<td>3</td>
-<td> Bus Fees Collection</td>
-<td><a href="<?=base_url();?>fees_report/bus" class="btn btn-xl btn-warning">View</a></td>
+<?php endif; ?>
+
+<?php if (!empty($allowedFeesPages['bus_fees_collection'])): ?>
+<tr>
+    <td>3</td>
+    <td>Bus Fees Collection</td>
+    <td><a href="<?= base_url('fees_report/bus') ?>" class="btn btn-xl btn-warning">View</a></td>
 </tr>
-<tr class="odd gradeX">
-<td>4</td>
-<td> Collect Other Fees</td>
-<td><a href="<?=base_url();?>fees_report/collect_other_fee" class="btn btn-xl btn-warning">View</a></td>
+<?php endif; ?>
+
+<?php if (!empty($allowedFeesPages['collect_other_fees'])): ?>
+<tr>
+    <td>4</td>
+    <td>Collect Other Fees</td>
+    <td><a href="<?= base_url('fees_report/collect_other_fee') ?>" class="btn btn-xl btn-warning">View</a></td>
 </tr>
-<tr class="odd gradeX">
-<td>5</td>
-<td>Management Consession</td>
-<td><a href="<?=base_url();?>fees_report/management" class="btn btn-xl btn-warning">View</a></td>
+<?php endif; ?>
+
+<?php if (!empty($allowedFeesPages['management_concession'])): ?>
+<tr>
+    <td>5</td>
+    <td>Management Concession</td>
+    <td><a href="<?= base_url('fees_report/management') ?>" class="btn btn-xl btn-warning">View</a></td>
 </tr>
-<tr class="odd gradeX">
-<td>6</td>
-<td> Change Student Category</td>
-<td><a href="<?=base_url();?>fees_report/category" class="btn btn-xl btn-warning">View</a></td>
+<?php endif; ?>
+
+<?php if (!empty($allowedFeesPages['change_student_category'])): ?>
+<tr>
+    <td>6</td>
+    <td>Change Student Category</td>
+    <td><a href="<?= base_url('fees_report/category') ?>" class="btn btn-xl btn-warning">View</a></td>
 </tr>
-<tr class="odd gradeX">
-<td>7</td>
-<td>Change Student Fees Structure</td>
-<td><a href="<?=base_url();?>fees_report/fees_structure" class="btn btn-xl btn-warning">View</a></td>
+<?php endif; ?>
+
+<?php if (!empty($allowedFeesPages['change_student_fees_structure'])): ?>
+<tr>
+    <td>7</td>
+    <td>Change Student Fees Structure</td>
+    <td><a href="<?= base_url('fees_report/fees_structure') ?>" class="btn btn-xl btn-warning">View</a></td>
 </tr>
-<tr class="odd gradeX">
-<td>8</td>
-<td> Report</td>
-<td><a href="<?=base_url();?>fees_report/report" class="btn btn-xl btn-warning">View</a></td>
+<?php endif; ?>
+
+<?php if (!empty($allowedFeesPages['fees_report_page'])): ?>
+<tr>
+    <td>8</td>
+    <td>Report</td>
+    <td><a href="<?= base_url('fees_report/report') ?>" class="btn btn-xl btn-warning">View</a></td>
 </tr>
+<?php endif; ?>
+
 </tbody>
 </table>
 </div>

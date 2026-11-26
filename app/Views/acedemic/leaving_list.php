@@ -202,6 +202,7 @@ $sn = 0;
             $reg= $sl_row->student_admission_id;
                 $ct_q = $db->query("select contact_no, area from  prospect_sales where 
                 session = '".$st_row->session_year."' and student_first_name = '".$st_row->first_name."' and student_middle_name = '".$st_row->middle_name."' and student_last_name = '".$st_row->last_name."'");
+                $ct_row = null;
                 foreach ($ct_q->getResult() as $ct_row) {}
                 $st_qry1 = $db->query("SELECT * FROM `student_admission_information` WHERE reg_no = '$reg'");
 // echo "SELECT * FROM `student_admission_information` WHERE reg_no = '$reg'";
@@ -222,7 +223,7 @@ if($row['section'] =='1'){
 }
 ?></td>
 <td><?=$row['category']?></td>
-<td><?=$ct_row->contact_no;?></td>
+<td><?= esc($ct_row->contact_no ?? '');?></td>
 <td><?php
 if($sl_row->date_of_leaving){
     echo $sl_row->date_of_leaving;
@@ -231,15 +232,23 @@ if($sl_row->date_of_leaving){
 }
 ?></td>
 <td>
-    <?php
-    if($sl_row->student_admission_id==$row['reg_no']){
-        ?>
-        <a href="<?=base_url();?>cer_leaving_print_final?reg_no=<?=$reg;?>&session=<?=$st_row->session_year;?>"><button class="print">Print</button></a>
-        OR
-        <a href="<?=base_url();?>cert_leaving?reg_no=<?=$reg;?>&session=<?=$st_row->session_year;?>"><button class="edit">Edit L.C</button></a>
-        <?php
-	}
-    ?>
+    <?php if ($sl_row->student_admission_id == $row['reg_no']): ?>
+
+        <?php if (canAccess('leaving', 'view')): ?>
+            <a class="print"
+               href="<?= base_url(); ?>cer_leaving_print_final?reg_no=<?= $reg; ?>&session=<?= $st_row->session_year; ?>">
+                Print
+            </a>
+        <?php endif; ?>
+
+        <?php if (canAccess('leaving', 'edit')): ?>
+            <a class="edit"
+               href="<?= base_url(); ?>cert_leaving?reg_no=<?= $reg; ?>&session=<?= $st_row->session_year; ?>">
+                Edit L.C
+            </a>
+        <?php endif; ?>
+
+    <?php endif; ?>
 </td>
 </tr>
                 <?php

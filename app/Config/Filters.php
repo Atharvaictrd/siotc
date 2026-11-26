@@ -5,6 +5,7 @@ namespace Config;
 use App\Filters\AdminLoginFilter;
 use App\Filters\AdminNotLoginFilter;
 use App\Filters\ModuleViewPermissionFilter;
+use App\Filters\SuperAdminFilter;
 use App\Filters\UserLoginFilter;
 use App\Filters\UserNotLoginFilter;
 use CodeIgniter\Config\BaseConfig;
@@ -29,6 +30,7 @@ class Filters extends BaseConfig
 		'isAdminLoggedin'=>AdminLoginFilter::class,
 		'isAdminNotLoggedin'=>AdminNotLoginFilter::class,
 		'moduleViewPermission'=>ModuleViewPermissionFilter::class,
+		'isSuperAdmin'=>SuperAdminFilter::class,
 	];
 
 	/**

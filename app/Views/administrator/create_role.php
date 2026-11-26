@@ -1,6 +1,5 @@
 
 <?= $this->extend('layout/tempmain') ?>
-
 <?= $this->section('content') ?>
 
 <div id="content" class="app-content">
@@ -18,76 +17,53 @@
             </div>
         <?php endif; ?>
 
-        <!-- 1. ADD ROLE -->
+        <!-- CREATE ROLE -->
         <div class="panel panel-inverse">
             <div class="panel-heading">
-                <h3 class="panel-title">Add Role</h3>
+                <h4 class="panel-title">Create Role</h4>
             </div>
 
             <div class="panel-body">
                 <form method="post" action="<?= base_url('save_role') ?>">
                     <?= csrf_field() ?>
 
-                    <div class="form-group row">
-                        <div class="col-xl-2 offset-xl-3">
-                            <b>Role Name :</b>
-                        </div>
-
-                        <div class="col-xl-4">
-                            <input type="text"
-                                   name="role_name"
-                                   class="form-control"
-                                   placeholder="Enter role name"
-                                   value="<?= esc(old('role_name') ?? '') ?>"
-                                   required>
-                        </div>
+                    <div class="form-group">
+                        <label>Role Name</label>
+                        <input type="text"
+                               name="role_name"
+                               class="form-control"
+                               style="max-width:350px"
+                               placeholder="Enter role name"
+                               value="<?= esc(old('role_name') ?? '') ?>"
+                               required>
                     </div>
-                    <br>
 
-                    <div class="form-group row">
-                        <div class="col-xl-2 offset-xl-3">
-                            <b>Description :</b>
-                        </div>
+                    <button type="submit" class="btn btn-success">
+                        Create Role
+                    </button>
 
-                        <div class="col-xl-4">
-                            <textarea name="description"
-                                      class="form-control"
-                                      placeholder="Enter description"><?= esc(old('description') ?? '') ?></textarea>
-                        </div>
-                    </div>
-                    <br>
-
-                    <div class="form-group row">
-                        <div class="col-xl-12 text-center">
-                            <button type="submit" class="btn btn-success col-xl-2">
-                                Create Role
-                            </button>
-                        </div>
-                    </div>
+                    <button type="reset" class="btn btn-danger">
+                        Reset
+                    </button>
                 </form>
             </div>
         </div>
 
-        <!-- 2. ASSIGN PERMISSIONS -->
+        <!-- ASSIGN PERMISSIONS -->
         <div class="panel panel-inverse">
             <div class="panel-heading">
-                <h3 class="panel-title">Assign Permissions (Pages)</h3>
+                <h4 class="panel-title">Assign Permissions</h4>
             </div>
 
             <div class="panel-body">
 
                 <form method="get" action="<?= base_url('create_role') ?>">
-                    <div class="form-group row">
-                        <div class="col-xl-2">
-                            <b>Select Role :</b>
-                        </div>
-
-                        <div class="col-xl-4">
-                            <select name="role_id"
-                                    class="form-control"
-                                    onchange="this.form.submit()"
-                                    required>
-                                <option value="">Select Role</option>
+                    <div class="row align-items-end">
+                        <div class="col-md-4">
+                            <label>Select Role</label>
+                            <select name="role_id" class="form-control"
+                                    onchange="this.form.submit()" required>
+                                <option value="">-- Select Role --</option>
 
                                 <?php foreach ($roles as $role): ?>
                                     <option value="<?= $role['role_id'] ?>"
@@ -104,68 +80,115 @@
 
                     <hr>
 
-                    <form method="post" action="<?= base_url('save-role-permissions') ?>">
+                    <form method="post" action="<?= base_url('save-role-permissions') ?>"
+                          id="permissionForm">
+
                         <?= csrf_field() ?>
 
                         <input type="hidden" name="role_id"
                                value="<?= esc($selectedRole) ?>">
 
-                        <div class="table-responsive">
-                            <table class="table table-striped table-bordered align-middle w-100">
-                                <thead>
-                                    <tr>
-                                        <th>Module / Page</th>
-                                        <th class="text-center">View</th>
-                                        <th class="text-center">Add</th>
-                                        <th class="text-center">Edit</th>
-                                        <th class="text-center">Delete</th>
-                                    </tr>
-                                </thead>
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-primary btn-sm"
+                                    onclick="setAllPermissions(true)">
+                                Select All
+                            </button>
 
-                                <tbody>
-                                    <?php foreach ($modules as $module): ?>
-                                        <tr>
-                                            <td>
-                                                <b><?= esc($module['parent_name'] ?? '') ?></b>
-                                                <?= !empty($module['parent_name']) ? ' - ' : '' ?>
-                                                <?= esc($module['module_name']) ?>
-                                            </td>
-
-                                            <?php foreach (['view', 'add', 'edit', 'delete'] as $action): ?>
-                                                <td class="text-center">
-                                                    <?php
-                                                    $permissionId = null;
-
-                                                    foreach ($permissions as $permission) {
-                                                        if (
-                                                            $permission['module_id'] == $module['module_id'] &&
-                                                            $permission['action_name'] == $action
-                                                        ) {
-                                                            $permissionId = $permission['permission_id'];
-                                                            break;
-                                                        }
-                                                    }
-                                                    ?>
-
-                                                    <?php if ($permissionId): ?>
-                                                        <input type="checkbox"
-                                                               name="permissions[]"
-                                                               value="<?= $permissionId ?>"
-                                                               <?= in_array($permissionId, $assignedPermissions) ? 'checked' : '' ?>>
-                                                    <?php else: ?>
-                                                        -
-                                                    <?php endif; ?>
-                                                </td>
-                                            <?php endforeach; ?>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                            <button type="button" class="btn btn-default btn-sm"
+                                    onclick="setAllPermissions(false)">
+                                Clear All
+                            </button>
                         </div>
+
+                        <?php
+                        $groupedModules = [];
+
+                        foreach ($modules as $module) {
+                            $groupName = $module['parent_name'] ?: 'Other Pages';
+                            $groupedModules[$groupName][] = $module;
+                        }
+                        ?>
+
+                        <?php foreach ($groupedModules as $groupName => $groupModules): ?>
+
+                            <div class="panel panel-default mb-3">
+                                <div class="panel-heading"
+                                     style="cursor:pointer"
+                                     onclick="toggleGroup(this)">
+
+                                    <label style="margin:0;cursor:pointer">
+                                        <input type="checkbox"
+                                               class="group-checkbox"
+                                               onclick="event.stopPropagation(); toggleGroupPermissions(this)">
+                                        <?= esc($groupName) ?>
+                                    </label>
+
+                                    <span class="pull-right">
+                                        <i class="fa fa-chevron-down"></i>
+                                    </span>
+                                </div>
+
+                                <div class="panel-body group-content"
+                                     style="display:block;padding:0">
+
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Page</th>
+                                                    <th class="text-center">View</th>
+                                                    <th class="text-center">Add</th>
+                                                    <th class="text-center">Edit</th>
+                                                    <th class="text-center">Delete</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                <?php foreach ($groupModules as $module): ?>
+                                                    <tr>
+                                                        <td><?= esc($module['module_name']) ?></td>
+
+                                                        <?php foreach (['view', 'add', 'edit', 'delete'] as $action): ?>
+                                                            <td class="text-center">
+                                                                <?php
+                                                                $permissionId = null;
+
+                                                                foreach ($permissions as $permission) {
+                                                                    if (
+                                                                        $permission['module_id'] == $module['module_id'] &&
+                                                                        $permission['action_name'] == $action
+                                                                    ) {
+                                                                        $permissionId = $permission['permission_id'];
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                ?>
+
+                                                                <?php if ($permissionId): ?>
+                                                                    <input type="checkbox"
+                                                                           class="permission-checkbox"
+                                                                           name="permissions[]"
+                                                                           value="<?= $permissionId ?>"
+                                                                           <?= in_array((int)$permissionId, $assignedPermissions) ? 'checked' : '' ?>>
+                                                                <?php else: ?>
+                                                                    -
+                                                                <?php endif; ?>
+                                                            </td>
+                                                        <?php endforeach; ?>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                        <?php endforeach; ?>
 
                         <button type="submit" class="btn btn-success">
                             Save Permissions
                         </button>
+
                     </form>
 
                 <?php else: ?>
@@ -177,56 +200,64 @@
             </div>
         </div>
 
-        <!-- 3. ROLE LIST -->
+        <!-- ROLE LIST -->
         <div class="panel panel-inverse">
             <div class="panel-heading">
-                <h3 class="panel-title">Role List</h3>
+                <h4 class="panel-title">Role List</h4>
             </div>
 
             <div class="panel-body">
                 <div class="table-responsive">
-                    <table class="table table-striped table-bordered align-middle w-100">
+                    <table class="table table-bordered table-striped">
                         <thead>
                             <tr>
-                                <th>Sr.No</th>
+                                <th width="60">#</th>
                                 <th>Role Name</th>
-                                <th>Description</th>
-                                <th>Assigned Permissions</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th>Assigned Modules</th>
+                                <th width="100">Action</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             <?php if (!empty($roles)): ?>
                                 <?php $i = 1; ?>
+
                                 <?php foreach ($roles as $role): ?>
                                     <tr>
                                         <td><?= $i++ ?></td>
-                                        <td><?= esc($role['role_name']) ?></td>
-                                        <td><?= esc($role['description'] ?? '') ?></td>
+
                                         <td>
-                                            <?= $rolePermissionCounts[$role['role_id']] ?? 0 ?>
-                                            permissions
+                                            <strong><?= esc($role['role_name']) ?></strong>
                                         </td>
+
                                         <td>
-                                            <?php if ($role['status'] == 1): ?>
-                                                <span class="badge bg-success">Active</span>
+                                            <?php
+                                            $assigned = $assignedModulesByRole[$role['role_id']] ?? [];
+                                            ?>
+
+                                            <?php if (!empty($assigned)): ?>
+                                                <?php foreach (array_unique($assigned) as $moduleName): ?>
+                                                    <span class="badge bg-primary me-1">
+                                                        <?= esc($moduleName) ?>
+                                                    </span>
+                                                <?php endforeach; ?>
                                             <?php else: ?>
-                                                <span class="badge bg-danger">Inactive</span>
+                                                <span class="text-muted">No modules assigned</span>
                                             <?php endif; ?>
                                         </td>
+
                                         <td>
                                             <a href="<?= base_url('create_role?role_id=' . $role['role_id']) ?>"
                                                class="btn btn-primary btn-sm">
-                                                Assign / Edit Permissions
+                                                <i class="fa fa-edit"></i> Edit
                                             </a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
+
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="6" class="text-center">
+                                    <td colspan="4" class="text-center">
                                         No roles found.
                                     </td>
                                 </tr>
@@ -239,5 +270,48 @@
 
     </div>
 </div>
+
+<script>
+function setAllPermissions(checked) {
+    document.querySelectorAll('.permission-checkbox').forEach(function(box) {
+        box.checked = checked;
+    });
+
+    updateGroupCheckboxes();
+}
+
+function toggleGroupPermissions(groupCheckbox) {
+    const panel = groupCheckbox.closest('.panel');
+    panel.querySelectorAll('.permission-checkbox').forEach(function(box) {
+        box.checked = groupCheckbox.checked;
+    });
+
+    updateGroupCheckboxes();
+}
+
+function toggleGroup(heading) {
+    const content = heading.nextElementSibling;
+    content.style.display = content.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateGroupCheckboxes() {
+    document.querySelectorAll('.panel').forEach(function(panel) {
+        const groupCheckbox = panel.querySelector('.group-checkbox');
+        if (!groupCheckbox) return;
+
+        const boxes = panel.querySelectorAll('.permission-checkbox');
+
+        groupCheckbox.checked =
+            boxes.length > 0 &&
+            Array.from(boxes).every(box => box.checked);
+    });
+}
+
+document.querySelectorAll('.permission-checkbox').forEach(function(box) {
+    box.addEventListener('change', updateGroupCheckboxes);
+});
+
+updateGroupCheckboxes();
+</script>
 
 <?= $this->endSection() ?>

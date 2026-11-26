@@ -1,332 +1,483 @@
-<?= $this->extend('layout/tempmain') ?>
+  <?= $this->extend('layout/tempmain') ?>
+  <?= $this->section('content') ?>
 
-<?= $this->section('links') ?>
-<?= $this->endSection('links') ?>
+  <div id="content" class="app-content">
 
-<?= $this->section('content') ?>
-<link href="assets/css/vendor.min.css" rel="stylesheet" />
-<link href="assets/css/default/app.min.css" rel="stylesheet" />
+      <?php if (session()->getFlashdata('success')): ?>
+          <div class="alert alert-success">
+              <?= esc(session()->getFlashdata('success')) ?>
+          </div>
+      <?php endif; ?>
 
+      <?php if (session()->getFlashdata('error')): ?>
+          <div class="alert alert-danger">
+              <?= esc(session()->getFlashdata('error')) ?>
+          </div>
+      <?php endif; ?>
 
-<link href="assets/plugins/datatables.net-bs5/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
-<link href="assets/plugins/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css" rel="stylesheet" />
-<link href="assets/plugins/datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css" rel="stylesheet" />
+      <?php if (session()->has('validation')): ?>
+          <div class="alert alert-danger">
+              <?= session('validation')->listErrors() ?>
+          </div>
+      <?php endif; ?>
 
+      <!-- CREATE USER -->
+      <div class="panel panel-inverse">
+          <div class="panel-heading">
+              <h4 class="panel-title">Create / Edit User</h4>
+          </div>
 
-<div class="menu-item d-flex">
-<a href="javascript:;" class="app-sidebar-minify-btn ms-auto d-flex align-items-center text-decoration-none" data-toggle="app-sidebar-minify"><i class="fa fa-angle-double-left"></i></a>
+          <div class="panel-body">
+
+              <form method="post" action="<?= base_url('save_user') ?>">
+                  <?= csrf_field() ?>
+
+                  <div class="row">
+
+                     <div class="col-md-4 mb-3">
+    <label>Full Name</label>
+    <input type="text"
+           name="full_name"
+           class="form-control"
+           value="<?= esc(old('full_name') ?? '') ?>"
+           placeholder="Enter full name"
+           required>
 </div>
 
-</div>
+                      <div class="col-md-4 mb-3">
+                          <label>Email</label>
+  <input type="email" name="email"
+        class="form-control"
+        value=""
+        placeholder="Enter email"
+        autocomplete="off"
+        required>
+                      </div>
 
-</div>
+                      <div class="col-md-4 mb-3">
+                          <label>Mobile</label>
+                          <input type="text" name="mobile"
+                                class="form-control"
+                                value="<?= esc(old('mobile') ?? '') ?>"
+                                placeholder="Enter mobile number" required>
+                      </div>
 
-</div>
-<div class="app-sidebar-bg" data-bs-theme="dark"></div>
-<div class="app-sidebar-mobile-backdrop"><a href="#" data-dismiss="app-sidebar-mobile" class="stretched-link"></a></div>
+                      <div class="col-md-4 mb-3">
+                          <label>Password</label>
+  <input type="password" name="password"
+        class="form-control"
+        placeholder="Enter password"
+        autocomplete="new-password"
+        required>
+                      </div>
 
+                      <div class="col-md-4 mb-3">
+                          <label>Select Role</label>
 
-<div id="content" class="app-content">
-<style>
-  .tab {
-    display: none;
-  }
-  .tab.active {
-    display: block;
-  }
-</style>
+  <select name="role_id" id="role_id"
+          class="form-control"
+          onchange="loadRolePermissions(this.value)">
 
+                              <option value="">-- Select Role --</option>
 
+                              <?php foreach ($roles as $role): ?>
+                                  <option value="<?= $role['role_id'] ?>"
+                                      <?= (string)$selectedRole === (string)$role['role_id'] ? 'selected' : '' ?>>
+                                      <?= esc($role['role_name']) ?>
+                                  </option>
+                              <?php endforeach; ?>
 
-<div class="col-xl-12">
-<?php
-if (!empty(session()->getFlashdata('select_fail'))) : ?>
-    <div class="alert alert-danger alert-dismissible">
-        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-        <?= session()->getFlashdata('select_fail'); ?>
-    </div>
-<?php
-endif
-?>
-<?php
-if (!empty(session()->getFlashdata('success'))) : ?>
-    <div class="alert alert-success alert-dismissible">
-        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-        <?= session()->getFlashdata('success'); ?>
-    </div>
-<?php
-endif
-?>
-<div class="panel panel-inverse">
+                          </select>
+                      </div>
 
-<div class="panel-heading">
+                      <div class="col-md-4 mb-3">
+                          <label>Address</label>
+                          <textarea name="address" class="form-control"
+                                    rows="2"
+                                    placeholder="Enter address"><?= esc(old('address') ?? '') ?></textarea>
+                      </div>
 
-<h3 class="panel-title">Create User</h3>
-</div>
+                  </div>
 
-<div class="panel-body">
-    <form method="post" action="<?= base_url('save_user')?>">
-    <div class="form-group row">
-          <div class="col-xl-2 offset-xl-3"><b> User Type : </b></div>
-         <div class="col-xl-4">  <select name="usertype" class="form-control">
-  <option value="">Select User Type</option>
-  <option value="superadmin">Superadmin</option>
-  <option value="admin">Admin</option>
-  <option value="accountant">Accountant</option>
-  <option value="teacher">Teacher</option>
-  <option value="other">Other</option>
-</select></div>
-         
-                                   
-         </div><br>
-           <div class="form-group row">
-        <div class="col-xl-2 offset-xl-3"><b> Username : </b></div>
-          <div class="col-xl-4"> <input type="text" name="username" class="form-control"  value="<?= set_value("username"); ?>">
-          <small style="color:red;"><?= isset($validation) ? $validation->getError('username') : '' ?></small>
-                                   
-         </div>
-    </div><br>
+                  <hr>
 
-<div class="form-group row">
-    <div class="col-xl-2 offset-xl-3">
-        <b>Assign Role :</b>
-    </div>
+                  <!-- PERMISSIONS -->
+                  <div class="mb-3">
+                      <strong>Permissions</strong>
 
-    <div class="col-xl-4">
-        <select name="role_id" class="form-control" required>
-            <option value="">Select Role</option>
+                      <span class="ml-3">
+                          <a href="javascript:void(0)" onclick="selectAllGroups(true)">Select All</a>
+                          &nbsp; | &nbsp;
+                          <a href="javascript:void(0)" onclick="selectAllGroups(false)">Clear All</a>
+                          &nbsp; | &nbsp;
+                          <a href="javascript:void(0)" onclick="toggleAllGroups()">Expand / Collapse All</a>
+                      </span>
+                  </div>
 
-            <?php foreach ($roles as $role): ?>
-                <option value="<?= $role['role_id'] ?>"
-                    <?= old('role_id') == $role['role_id'] ? 'selected' : '' ?>>
-                    <?= esc($role['role_name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-</div>
-<br>
+                  <?php
+                  $moduleMap = [];
 
-     <div class="form-group row">
-        <div class="col-xl-2 offset-xl-3"><b>  Password : </b></div>
-          <div class="col-xl-4"> <input type="text" name="password" class="form-control"  value="<?= set_value("password"); ?>">
-          <small style="color:red;"><?= isset($validation) ? $validation->getError('password') : '' ?></small></div>
-    </div><br>
-     <div class="form-group row">
-        <div class="col-xl-2 offset-xl-3"><b>Confirm Password  : </b></div>
-          <div class="col-xl-4"> <input type="text" name="conf_password" class="form-control"  value="<?= set_value("conf_password"); ?>">
-          <small style="color:red;"><?= isset($validation) ? $validation->getError('conf_password') : '' ?></small></div>
-    </div>
-    <br>
-   
-<table id="data-table-buttons checkboxTable" class="table table-striped table-bordered align-middle w-100 text-nowrap">
-<thead>
-<tr>
+                  foreach ($modules as $module) {
+                      $moduleMap[$module['module_id']] = $module;
+                  }
 
+                  $getModulePath = function ($module) use (&$getModulePath, $moduleMap) {
+                      $path = [$module['module_name']];
+                      $parentId = $module['parent_id'];
 
-<th class="text-nowrap text-center">Assign Permission</th>
-<th class="text-nowrap text-center"><input type="checkbox" id="checkAll">Check All</th>
+                      while (!empty($parentId) && isset($moduleMap[$parentId])) {
+                          $parent = $moduleMap[$parentId];
+                          array_unshift($path, $parent['module_name']);
+                          $parentId = $parent['parent_id'];
+                      }
 
-</tr>
-</thead>
-<tbody>
+                      return implode(' > ', $path);
+                  };
 
-<tr class="odd gradeX">
-<td>Admission</td>
-<td class="text-center"><input type="checkbox" name="admission"  value="1" class="checkbox"> </td>
-</tr>
-<tr class="odd gradeX">
-<td>Fees</td>
-<td class="text-center"><input type="checkbox" name="fees"   value="1" class="checkbox"> </td>
-</tr>
-<!--<tr class="odd gradeX">-->
-<!--<td>Scholarship</td>-->
-<!--<td class="text-center"><input type="checkbox" name="scholarship"  value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<!--<tr class="odd gradeX">-->
-<!--<td>Time Table Management</td>-->
-<!--<td class="text-center"><input type="checkbox" name="time_table"  value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<!--<tr class="odd gradeX">-->
-<!--<td>Employee Management</td>-->
-<!--<td class="text-center"><input type="checkbox" name="employee_manage"   value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<!--<tr class="odd gradeX">-->
-<!--<td>Staff Attendance</td>-->
-<!--<td class="text-center"><input type="checkbox" name="staff_atten"  value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<!--<tr class="odd gradeX">-->
-<!--<td>Salary</td>-->
-<!--<td class="text-center"><input type="checkbox" name="salary"  value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<!--<tr class="odd gradeX">-->
-<!--<td>Leaves</td>-->
-<!--<td class="text-center"><input type="checkbox" name="leaves"  value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<!--<tr class="odd gradeX">-->
-<!--<td>Event Planner</td>-->
-<!--<td class="text-center"><input type="checkbox" name="eve_planner"  value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<!--<tr class="odd gradeX">-->
-<!--<td>Library</td>-->
-<!--<td class="text-center"><input type="checkbox" name="library"  value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<!--<tr class="odd gradeX">-->
-<!--<td>Stock </td>-->
-<!--<td class="text-center"><input type="checkbox" name="stock"  value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<!--<tr class="odd gradeX">-->
-<!--<td>Account </td>-->
-<!--<td class="text-center"><input type="checkbox" name="amount"  value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<!--<tr class="odd gradeX">-->
-<!--<td>Exam </td>-->
-<!--<td class="text-center"><input type="checkbox" name="exam"  value="1" class="checkbox"> </td>-->
-<!--</tr>-->
-<tr class="odd gradeX">
-<td>Certificates </td>
-<td class="text-center"><input type="checkbox" name="certificates"  value="1" class="checkbox"> </td>
-</tr>
-<tr class="odd gradeX">
-<td>User Management </td>
-<td class="text-center"><input type="checkbox" name="user_manage"  value="1" class="checkbox"> </td>
-</tr>
-<tr class="odd gradeX">
-<td>Administrator </td>
-<td class="text-center"><input type="checkbox" name="administrator"  value="1" class="checkbox"> </td>
-</tr>
-<tr class="odd gradeX">
+                  $permissionMap = [];
 
-<td class="text-center" colspan="2"><input type="submit" name=""  id="submitButton" class=" btn btn-success col-xl-2" >
-<input type="reset" name="" class=" btn btn-danger col-xl-2" ></td>
-</tr>
+                  foreach ($permissions as $permission) {
+                      $permissionMap[$permission['module_id']][$permission['action_name']] =
+                          $permission['permission_id'];
+                  }
+                  
+$groupedModules = [];
+$feesReportChildren = [];
 
-</tbody>
-</table>
-</div>
+// Collect permission-only pages directly under Fees Report.
+foreach ($modules as $module) {
+    $parentId = (int) ($module['parent_id'] ?? 0);
 
-
-<div class="hljs-wrapper">
-<pre><code class="html" data-url="<?= base_url('assets/data/table-manage/keytable.json'); ?>"></code></pre>
-</div>
-</form>
-</div>
-
-</div>
-
-</div>
-
-</div>
-<script>
-    // Check All functionality
-document.getElementById('checkAll').addEventListener('change', function () {
-    var checkboxes = document.querySelectorAll('.checkbox');
-    for (var i = 0; i < checkboxes.length; i++) {
-        checkboxes[i].checked = this.checked;
+    if (
+        isset($moduleMap[$parentId]) &&
+        ($moduleMap[$parentId]['module_key'] ?? '') === 'fees_report' &&
+        isset($permissionMap[$module['module_id']])
+    ) {
+        $feesReportChildren[] = $module;
     }
-});
+}
 
-// Form submission validation
-// document.getElementById('submitButton').addEventListener('click', function () {
-//     var checkboxes = document.querySelectorAll('.checkbox');
-//     var isChecked = false;
-//     for (var i = 0; i < checkboxes.length; i++) {
-//         if (checkboxes[i].checked) {
-//             isChecked = true;
-//             break;
-//         }
-//     }
-//     if (!isChecked) {
-//         alert("Please select at least one option.");
-//     } else {
-//         // Form submission code here
-//         // For example, you can submit the form programmatically or perform any other action
-//         console.log("Form submitted successfully.");
-//     }
-// });
-
-</script>
-<script>
-  var currentTab = 0;
-  showTab(currentTab);
-
-  function showTab(n) {
-    var tabs = document.getElementsByClassName("tab");
-    tabs[n].classList.add("active");
-    if (n == 0) {
-      document.getElementById("prevBtn").style.display = "none";
-    } else {
-      document.getElementById("prevBtn").style.display = "inline";
+// Group route-based modules under their top-level module.
+foreach ($modules as $module) {
+    if (
+        ($module['module_key'] ?? '') === 'dashboard' ||
+        empty($module['route'])
+    ) {
+        continue;
     }
-    if (n == (tabs.length - 1)) {
-      document.getElementById("nextBtn").innerHTML = "Submit";
-    } else {
-      document.getElementById("nextBtn").innerHTML = "Next";
+
+    $moduleId = (int) $module['module_id'];
+    $parentId = (int) ($module['parent_id'] ?? 0);
+    $rootId = $moduleId;
+
+    while ($parentId > 0 && isset($moduleMap[$parentId])) {
+        $rootId = $parentId;
+        $parentId = (int) ($moduleMap[$parentId]['parent_id'] ?? 0);
     }
-    // Show only the current tab
-    for (var i = 0; i < tabs.length; i++) {
-      if (i !== n) {
-        tabs[i].classList.remove("active");
+
+    $groupName = $moduleMap[$rootId]['module_name'];
+    $groupedModules[$groupName][] = $module;
+}
+
+// Within each top-level group, keep pages of the same branch together.
+// Example: all Admission pages, then Fees pages, then Student Certificates pages.
+foreach ($groupedModules as $groupName => $groupModules) {
+    $branchGroups = [];
+
+    foreach ($groupModules as $module) {
+        $branchId = (int) $module['module_id'];
+        $parentId = (int) ($module['parent_id'] ?? 0);
+
+        while (
+            $parentId > 0 &&
+            isset($moduleMap[$parentId]) &&
+            (int) ($moduleMap[$parentId]['parent_id'] ?? 0) !== 0
+        ) {
+            $branchId = $parentId;
+            $parentId = (int) ($moduleMap[$parentId]['parent_id'] ?? 0);
+        }
+
+        $branchGroups[$branchId][] = $module;
+    }
+
+    $groupedModules[$groupName] = $branchGroups;
+}
+
+
+                  ?>
+
+                  <!-- DASHBOARD -->
+                  <div class="table-responsive mb-2">
+                      <table class="table table-bordered mb-0">
+                          <thead>
+                              <tr>
+                                  <th>Module / Page</th>
+                                  <th class="text-center">View</th>
+                                  <th class="text-center">Add</th>
+                                  <th class="text-center">Edit</th>
+                                  <th class="text-center">Delete</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              <?php foreach ($modules as $module): ?>
+                                  <?php if (($module['module_key'] ?? '') === 'dashboard'): ?>
+                                      <tr>
+                                          <td><?= esc($module['module_name']) ?></td>
+                                          <?php foreach (['view', 'add', 'edit', 'delete'] as $action): ?>
+                                              <td class="text-center">
+                                                  <?php if (isset($permissionMap[$module['module_id']][$action])): ?>
+                                                      <?php $permissionId = (int) $permissionMap[$module['module_id']][$action]; ?>
+                                                      <input type="hidden" name="permission_ids[]" value="<?= $permissionId ?>">
+                                                      <input type="checkbox" class="role-permission" name="permissions[]" value="<?= $permissionId ?>"
+                                                          <?= in_array($permissionId, $assignedPermissions, true) ? 'checked' : '' ?>>
+                                                  <?php else: ?>
+                                                      -
+                                                  <?php endif; ?>
+                                              </td>
+                                          <?php endforeach; ?>
+                                      </tr>
+                                  <?php endif; ?>
+                              <?php endforeach; ?>
+                          </tbody>
+                      </table>
+                  </div>
+
+                  <!-- MODULE GROUPS -->
+                  <?php foreach ($groupedModules as $groupName => $groupModules): ?>
+                      <div class="panel panel-default permission-group mb-2">
+                          <div class="panel-heading" style="cursor:pointer" onclick="togglePermissionGroup(this)">
+                              <i class="fa fa-folder text-warning"></i>
+                              <strong><?= esc($groupName) ?></strong>
+                              <span class="pull-right">
+                                  <a href="javascript:void(0)" onclick="event.stopPropagation(); selectGroup(this, true)">Select All</a>
+                                  &nbsp;
+                                  <i class="fa fa-chevron-down group-arrow"></i>
+                              </span>
+                          </div>
+
+                          <div class="panel-body group-content" style="display:none;padding:0">
+                              <div class="table-responsive">
+                                  <table class="table table-bordered table-striped mb-0">
+                                      <thead>
+                                          <tr>
+                                              <th>Module / Page</th>
+                                              <th class="text-center">View</th>
+                                              <th class="text-center">Add</th>
+                                              <th class="text-center">Edit</th>
+                                              <th class="text-center">Delete</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody>
+                                          <?php foreach ($groupModules as $branchModules): ?>
+                                              <?php foreach ($branchModules as $module): ?>
+                                                  <?php
+                                                      $rowsToRender = [$module];
+                                                      if (($module['module_key'] ?? '') === 'fees_report') {
+                                                          $rowsToRender = array_merge($rowsToRender, $feesReportChildren);
+                                                      }
+                                                  ?>
+                                                  <?php foreach ($rowsToRender as $rowModule): ?>
+                                                      <tr>
+                                                          <td><?= esc($getModulePath($rowModule)) ?></td>
+                                                          <?php foreach (['view', 'add', 'edit', 'delete'] as $action): ?>
+                                                              <td class="text-center">
+                                                                  <?php if (isset($permissionMap[$rowModule['module_id']][$action])): ?>
+                                                                      <?php $permissionId = (int) $permissionMap[$rowModule['module_id']][$action]; ?>
+                                                                      <input type="hidden" name="permission_ids[]" value="<?= $permissionId ?>">
+                                                                      <input type="checkbox" class="role-permission" name="permissions[]" value="<?= $permissionId ?>"
+                                                                          <?= in_array($permissionId, $assignedPermissions, true) ? 'checked' : '' ?>>
+                                                                  <?php else: ?>
+                                                                      -
+                                                                  <?php endif; ?>
+                                                              </td>
+                                                          <?php endforeach; ?>
+                                                      </tr>
+                                                  <?php endforeach; ?>
+                                              <?php endforeach; ?>
+                                          <?php endforeach; ?>
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </div>
+                      </div>
+                  <?php endforeach; ?>
+
+                  <div class="mt-3">
+                      <button type="submit" class="btn btn-success">
+                          Create User
+                      </button>
+
+                      <a href="<?= base_url('create_user') ?>"
+                        class="btn btn-danger">
+                          Cancel
+                      </a>
+                  </div>
+
+              </form>
+
+          </div>
+      </div>
+
+      <!-- USER LIST -->
+      <div class="panel panel-inverse">
+          <div class="panel-heading">
+              <h4 class="panel-title">User List (<?= count($users) ?>)</h4>
+          </div>
+
+          <div class="panel-body">
+
+              <div class="table-responsive">
+                  <table class="table table-bordered table-striped">
+
+                      <thead>
+                          <tr>
+                              <th>#</th>
+                              <th>Full Name</th>
+                              <th>Email</th>
+                              <th>Mobile</th>
+                              <th>Role</th>
+                              <th>Permissions</th>
+                              <th>Address</th>
+                              <th>Action</th>
+                          </tr>
+                      </thead>
+
+                      <tbody>
+
+                          <?php if (!empty($users)): ?>
+                              <?php $i = 1; ?>
+
+                              <?php foreach ($users as $user): ?>
+                                  <tr>
+                                      <td><?= $i++ ?></td>
+
+                                      <td><?= esc($user['full_name'] ?? '') ?></td>
+
+                                      <td><?= esc($user['email'] ?? '') ?></td>
+
+                                      <td><?= esc($user['mobile'] ?? '') ?></td>
+
+                                      <td><?= esc($user['role_name'] ?? 'No Role') ?></td>
+
+                                      <td>
+                                          <?php
+                                          $userModuleList = $userModules[$user['user_id']] ?? [];
+                                          ?>
+
+                                          <?php if (!empty($userModuleList)): ?>
+                                              <?php foreach (array_unique($userModuleList) as $moduleName): ?>
+                                                  <span class="badge badge-primary">
+                                                      <?= esc($moduleName) ?>
+                                                  </span>
+                                              <?php endforeach; ?>
+                                          <?php else: ?>
+                                              <span class="text-muted">No permissions</span>
+                                          <?php endif; ?>
+                                      </td>
+
+                                      <td><?= esc($user['address'] ?? '') ?></td>
+
+                                    <td>
+      <a href="<?= base_url('edit_user/' . $user['user_id']) ?>"
+        class="btn btn-sm btn-primary">
+          <i class="fa fa-edit"></i> Edit
+      </a>
+
+  <form action="<?= base_url('delete_user/' . $user['user_id']) ?>"
+        method="post"
+        style="display:inline;"
+        onsubmit="return confirm('Are you sure you want to delete this user?');">
+
+      <?= csrf_field() ?>
+
+      <button type="submit" class="btn btn-sm btn-danger">
+          Delete
+      </button>
+
+  </form>
+  </td>
+                                  </tr>
+                              <?php endforeach; ?>
+
+                          <?php else: ?>
+                              <tr>
+                                  <td colspan="8" class="text-center">
+                                      No users found.
+                                  </td>
+                              </tr>
+                          <?php endif; ?>
+
+                      </tbody>
+
+                  </table>
+              </div>
+
+          </div>
+      </div>
+
+  </div>
+
+  <script>
+  function togglePermissionGroup(heading) {
+      const content = heading.nextElementSibling;
+      const arrow = heading.querySelector('.group-arrow');
+      const isHidden = content.style.display === 'none';
+      content.style.display = isHidden ? 'block' : 'none';
+      if (arrow) {
+          arrow.classList.toggle('fa-chevron-down', !isHidden);
+          arrow.classList.toggle('fa-chevron-up', isHidden);
       }
-    }
   }
 
-  function nextStep() {
-    var tabs = document.getElementsByClassName("tab");
-    if (currentTab >= tabs.length - 1) {
-      document.getElementById("wizardForm").submit();
-      return false;
-    }
-    if (!validateForm()) return false;
-    currentTab++;
-    showTab(currentTab);
+  function selectGroup(link, checked) {
+      const group = link.closest('.permission-group');
+      group.querySelectorAll('.role-permission').forEach(function(box) {
+          box.checked = checked;
+      });
   }
 
-  function prevStep() {
-    if (currentTab <= 0) {
-      return false;
-    }
-    currentTab--;
-    showTab(currentTab);
+  function selectAllGroups(checked) {
+      document.querySelectorAll('.role-permission').forEach(function(box) {
+          box.checked = checked;
+      });
   }
 
-  function validateForm() {
-    var tabs = document.getElementsByClassName("tab");
-    var inputs = tabs[currentTab].getElementsByTagName("input");
-    for (var i = 0; i < inputs.length; i++) {
-      if (inputs[i].value == "") {
-        alert("Please fill in all fields.");
-        return false;
-      }
-    }
-    return true;
+  function toggleAllGroups() {
+      const groups = document.querySelectorAll('.permission-group');
+      const shouldExpand = Array.from(groups).some(function(group) {
+          return group.querySelector('.group-content').style.display === 'none';
+      });
+      groups.forEach(function(group) {
+          group.querySelector('.group-content').style.display = shouldExpand ? 'block' : 'none';
+          const arrow = group.querySelector('.group-arrow');
+          if (arrow) {
+              arrow.classList.toggle('fa-chevron-down', !shouldExpand);
+              arrow.classList.toggle('fa-chevron-up', shouldExpand);
+          }
+      });
   }
 
-  function openTab(evt, tabName) {
-    var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tab");
-    for (i = 0; i < tabcontent.length; i++) {
-      tabcontent[i].style.display = "none";
-    }
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
-      tablinks[i].classList.remove("active");
-    }
-    document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.classList.add("active");
-    currentTab = Array.prototype.indexOf.call(document.getElementsByClassName("tab"), document.getElementById(tabName));
+  function loadRolePermissions(roleId) {
+      document.querySelectorAll('.role-permission').forEach(function(box) {
+          box.checked = false;
+      });
+      if (!roleId) return;
+
+      fetch("<?= base_url('get_role_permissions') ?>?role_id=" + encodeURIComponent(roleId))
+          .then(function(response) {
+              if (!response.ok) throw new Error('Request failed');
+              return response.json();
+          })
+          .then(function(permissionIds) {
+              const selectedIds = permissionIds.map(function(id) { return parseInt(id, 10); });
+              document.querySelectorAll('.role-permission').forEach(function(box) {
+                  box.checked = selectedIds.includes(parseInt(box.value, 10));
+              });
+          })
+          .catch(function(error) {
+              console.error('Permission loading error:', error);
+          });
   }
-</script>
+  </script>
 
-
-<a href="javascript:;" class="btn btn-icon btn-circle btn-theme btn-scroll-to-top" data-toggle="scroll-to-top"><i class="fa fa-angle-up"></i></a>
-
-</div>
-
-
-<script src="assets/js/vendor.min.js" type="6d06734b60a66024f3330210-text/javascript"></script>
-<script src="assets/js/app.min.js" type="6d06734b60a66024f3330210-text/javascript"></script>
-
-
-<?= $this->endSection() ?>
-
+  <?= $this->endSection() ?>

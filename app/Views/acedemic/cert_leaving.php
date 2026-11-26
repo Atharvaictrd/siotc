@@ -468,11 +468,7 @@ if (!empty($student_detail['date_of_birth'])) {
 		        <td>:</td>
 		        <td colspan="3" class="letter"><input type="text" class="letter"  name="date_of_leaving" size="40" value="<?PHP 
 		        echo $stu_lc['date_of_leaving']; ?>"></div>
-                     <?php echo '</br>'; $day = substr($stu_lc['date_of_leaving'], 8);
-					  $month = substr($stu_lc['date_of_leaving'], 6);
-					    $yea = date('Y',$stu_lc['date_of_leaving']);
-					 $y = intval($yea / 100);
-		       // echo $stu_lc['date_of_leaving']; ?></td>
+                <?php echo '</br>'; ?></td>
 		        </tr>
 		      <tr>
 		        <td>12) </td>
