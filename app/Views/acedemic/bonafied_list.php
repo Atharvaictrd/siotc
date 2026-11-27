@@ -198,7 +198,27 @@ if($st_row->section =='1'){
 <td><?=$ct_row->contact_no;?></td>
 
 
-      <td><a href="<?= base_url(); ?>cert_bonafied?reg_no=<?= $st_row->reg_no; ?>" class="btn btn-warning"  >Print</a> | <a href="<?= base_url(); ?>bonafied" class="btn btn-primary">Edit</a></td>
+   <td>
+
+    <?php if (canAccess('bonafied', 'view')): ?>
+
+        <a href="<?= base_url(); ?>cert_bonafied?reg_no=<?= $st_row->reg_no; ?>"
+           class="btn btn-warning">
+            Print
+        </a>
+
+    <?php endif; ?>
+
+    <?php if (canAccess('bonafied', 'edit')): ?>
+
+        <a href="<?= base_url(); ?>bonafied"
+           class="btn btn-primary">
+            Edit
+        </a>
+
+    <?php endif; ?>
+
+</td>
 </tr>
 
 <?php 	  } ?>

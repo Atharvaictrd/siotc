@@ -48,7 +48,7 @@ use CodeIgniter\Router\RouteCollection;
         'as' => 'create_user',
         'filter' => ['isAdminLoggedin', 'isSuperAdmin']
     ]);
-    $routes->match(['get','post'],'/update_password', 'Admin::update_password', ['as' => 'update_password']);
+    $routes->match(['get','post'], '/update_password', 'Admin::update_password', ['as' => 'update_password']);
     $routes->post('/save_user', 'Admin::save_user', [
         'filter' => ['isAdminLoggedin', 'isSuperAdmin']
     ]);

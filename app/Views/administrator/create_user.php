@@ -134,29 +134,76 @@
                       return implode(' > ', $path);
                   };
 
-                  $groupedModules = [];
-
-                  foreach ($modules as $module) {
-                      if (!empty($module['route']) && $module['module_key'] !== 'dashboard') {
-                          $rootId = $module['module_id'];
-                          $parentId = $module['parent_id'];
-
-                          while (!empty($parentId) && isset($moduleMap[$parentId])) {
-                              $rootId = $parentId;
-                              $parentId = $moduleMap[$parentId]['parent_id'];
-                          }
-
-                          $groupName = $moduleMap[$rootId]['module_name'];
-                          $groupedModules[$groupName][] = $module;
-                      }
-                  }
-
                   $permissionMap = [];
 
                   foreach ($permissions as $permission) {
                       $permissionMap[$permission['module_id']][$permission['action_name']] =
                           $permission['permission_id'];
                   }
+                  
+$groupedModules = [];
+$feesReportChildren = [];
+
+// Collect permission-only pages directly under Fees Report.
+foreach ($modules as $module) {
+    $parentId = (int) ($module['parent_id'] ?? 0);
+
+    if (
+        isset($moduleMap[$parentId]) &&
+        ($moduleMap[$parentId]['module_key'] ?? '') === 'fees_report' &&
+        isset($permissionMap[$module['module_id']])
+    ) {
+        $feesReportChildren[] = $module;
+    }
+}
+
+// Group route-based modules under their top-level module.
+foreach ($modules as $module) {
+    if (
+        ($module['module_key'] ?? '') === 'dashboard' ||
+        empty($module['route'])
+    ) {
+        continue;
+    }
+
+    $moduleId = (int) $module['module_id'];
+    $parentId = (int) ($module['parent_id'] ?? 0);
+    $rootId = $moduleId;
+
+    while ($parentId > 0 && isset($moduleMap[$parentId])) {
+        $rootId = $parentId;
+        $parentId = (int) ($moduleMap[$parentId]['parent_id'] ?? 0);
+    }
+
+    $groupName = $moduleMap[$rootId]['module_name'];
+    $groupedModules[$groupName][] = $module;
+}
+
+// Within each top-level group, keep pages of the same branch together.
+// Example: all Admission pages, then Fees pages, then Student Certificates pages.
+foreach ($groupedModules as $groupName => $groupModules) {
+    $branchGroups = [];
+
+    foreach ($groupModules as $module) {
+        $branchId = (int) $module['module_id'];
+        $parentId = (int) ($module['parent_id'] ?? 0);
+
+        while (
+            $parentId > 0 &&
+            isset($moduleMap[$parentId]) &&
+            (int) ($moduleMap[$parentId]['parent_id'] ?? 0) !== 0
+        ) {
+            $branchId = $parentId;
+            $parentId = (int) ($moduleMap[$parentId]['parent_id'] ?? 0);
+        }
+
+        $branchGroups[$branchId][] = $module;
+    }
+
+    $groupedModules[$groupName] = $branchGroups;
+}
+
+
                   ?>
 
                   <!-- DASHBOARD -->
@@ -171,27 +218,18 @@
                                   <th class="text-center">Delete</th>
                               </tr>
                           </thead>
-
                           <tbody>
                               <?php foreach ($modules as $module): ?>
-                                  <?php if ($module['module_key'] === 'dashboard'): ?>
+                                  <?php if (($module['module_key'] ?? '') === 'dashboard'): ?>
                                       <tr>
                                           <td><?= esc($module['module_name']) ?></td>
-
                                           <?php foreach (['view', 'add', 'edit', 'delete'] as $action): ?>
                                               <td class="text-center">
                                                   <?php if (isset($permissionMap[$module['module_id']][$action])): ?>
-                                                      <input type="hidden"
-                                                             name="permission_ids[]"
-                                                             value="<?= esc($permissionMap[$module['module_id']][$action]) ?>">
-                                                      <input type="checkbox"
-       class="role-permission"
-       name="permissions[]"
-       value="<?= $permissionMap[$module['module_id']][$action] ?>"
-       <?= in_array(
-           (int)$permissionMap[$module['module_id']][$action],
-           $assignedPermissions
-       ) ? 'checked' : '' ?>>
+                                                      <?php $permissionId = (int) $permissionMap[$module['module_id']][$action]; ?>
+                                                      <input type="hidden" name="permission_ids[]" value="<?= $permissionId ?>">
+                                                      <input type="checkbox" class="role-permission" name="permissions[]" value="<?= $permissionId ?>"
+                                                          <?= in_array($permissionId, $assignedPermissions, true) ? 'checked' : '' ?>>
                                                   <?php else: ?>
                                                       -
                                                   <?php endif; ?>
@@ -204,35 +242,22 @@
                       </table>
                   </div>
 
+                  <!-- MODULE GROUPS -->
                   <?php foreach ($groupedModules as $groupName => $groupModules): ?>
-
                       <div class="panel panel-default permission-group mb-2">
-
-                          <div class="panel-heading"
-                              style="cursor:pointer"
-                              onclick="togglePermissionGroup(this)">
-
+                          <div class="panel-heading" style="cursor:pointer" onclick="togglePermissionGroup(this)">
                               <i class="fa fa-folder text-warning"></i>
                               <strong><?= esc($groupName) ?></strong>
-
                               <span class="pull-right">
-                                  <a href="javascript:void(0)"
-                                    onclick="event.stopPropagation(); selectGroup(this, true)">
-                                      Select All
-                                  </a>
-
+                                  <a href="javascript:void(0)" onclick="event.stopPropagation(); selectGroup(this, true)">Select All</a>
                                   &nbsp;
-
                                   <i class="fa fa-chevron-down group-arrow"></i>
                               </span>
                           </div>
 
-                          <div class="panel-body group-content"
-                              style="display:none;padding:0">
-
+                          <div class="panel-body group-content" style="display:none;padding:0">
                               <div class="table-responsive">
                                   <table class="table table-bordered table-striped mb-0">
-
                                       <thead>
                                           <tr>
                                               <th>Module / Page</th>
@@ -242,44 +267,39 @@
                                               <th class="text-center">Delete</th>
                                           </tr>
                                       </thead>
-
                                       <tbody>
-                                          <?php foreach ($groupModules as $module): ?>
-                                              <tr>
-                                                  <td><?= esc($getModulePath($module)) ?></td>
-
-                                                  <?php foreach (['view', 'add', 'edit', 'delete'] as $action): ?>
-                                                      <td class="text-center">
-                                                          <?php if (isset($permissionMap[$module['module_id']][$action])): ?>
-
-                                                              <input type="hidden"
-                                                                     name="permission_ids[]"
-                                                                     value="<?= esc($permissionMap[$module['module_id']][$action]) ?>">
-                                                              <input type="checkbox"
-                                                                    class="role-permission"
-                                                                    name="permissions[]"
-                                                                    value="<?= esc($permissionMap[$module['module_id']][$action]) ?>"
-                                                                    <?= in_array(
-                                                                        (int)$permissionMap[$module['module_id']][$action],
-                                                                        $assignedPermissions
-                                                                    ) ? 'checked' : '' ?>>
-
-                                                          <?php else: ?>
-                                                              -
-                                                          <?php endif; ?>
-                                                      </td>
+                                          <?php foreach ($groupModules as $branchModules): ?>
+                                              <?php foreach ($branchModules as $module): ?>
+                                                  <?php
+                                                      $rowsToRender = [$module];
+                                                      if (($module['module_key'] ?? '') === 'fees_report') {
+                                                          $rowsToRender = array_merge($rowsToRender, $feesReportChildren);
+                                                      }
+                                                  ?>
+                                                  <?php foreach ($rowsToRender as $rowModule): ?>
+                                                      <tr>
+                                                          <td><?= esc($getModulePath($rowModule)) ?></td>
+                                                          <?php foreach (['view', 'add', 'edit', 'delete'] as $action): ?>
+                                                              <td class="text-center">
+                                                                  <?php if (isset($permissionMap[$rowModule['module_id']][$action])): ?>
+                                                                      <?php $permissionId = (int) $permissionMap[$rowModule['module_id']][$action]; ?>
+                                                                      <input type="hidden" name="permission_ids[]" value="<?= $permissionId ?>">
+                                                                      <input type="checkbox" class="role-permission" name="permissions[]" value="<?= $permissionId ?>"
+                                                                          <?= in_array($permissionId, $assignedPermissions, true) ? 'checked' : '' ?>>
+                                                                  <?php else: ?>
+                                                                      -
+                                                                  <?php endif; ?>
+                                                              </td>
+                                                          <?php endforeach; ?>
+                                                      </tr>
                                                   <?php endforeach; ?>
-
-                                              </tr>
+                                              <?php endforeach; ?>
                                           <?php endforeach; ?>
                                       </tbody>
-
                                   </table>
                               </div>
-
                           </div>
                       </div>
-
                   <?php endforeach; ?>
 
                   <div class="mt-3">
@@ -398,15 +418,11 @@
   </div>
 
   <script>
-
   function togglePermissionGroup(heading) {
       const content = heading.nextElementSibling;
       const arrow = heading.querySelector('.group-arrow');
-
       const isHidden = content.style.display === 'none';
-
       content.style.display = isHidden ? 'block' : 'none';
-
       if (arrow) {
           arrow.classList.toggle('fa-chevron-down', !isHidden);
           arrow.classList.toggle('fa-chevron-up', isHidden);
@@ -415,7 +431,6 @@
 
   function selectGroup(link, checked) {
       const group = link.closest('.permission-group');
-
       group.querySelectorAll('.role-permission').forEach(function(box) {
           box.checked = checked;
       });
@@ -429,42 +444,39 @@
 
   function toggleAllGroups() {
       const groups = document.querySelectorAll('.permission-group');
-
       const shouldExpand = Array.from(groups).some(function(group) {
           return group.querySelector('.group-content').style.display === 'none';
       });
-
       groups.forEach(function(group) {
-          group.querySelector('.group-content').style.display =
-              shouldExpand ? 'block' : 'none';
+          group.querySelector('.group-content').style.display = shouldExpand ? 'block' : 'none';
+          const arrow = group.querySelector('.group-arrow');
+          if (arrow) {
+              arrow.classList.toggle('fa-chevron-down', !shouldExpand);
+              arrow.classList.toggle('fa-chevron-up', shouldExpand);
+          }
       });
+  }
 
   function loadRolePermissions(roleId) {
+      document.querySelectorAll('.role-permission').forEach(function(box) {
+          box.checked = false;
+      });
+      if (!roleId) return;
 
-    document.querySelectorAll('.role-permission').forEach(box => {
-        box.checked = false;
-    });
-
-    if (!roleId) return;
-
-    fetch("<?= base_url('get_role_permissions') ?>?role_id=" + encodeURIComponent(roleId))
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Request failed');
-            }
-            return response.json();
-        })
-        .then(permissionIds => {
-
-            document.querySelectorAll('.role-permission').forEach(box => {
-                box.checked = permissionIds.includes(
-                    parseInt(box.value, 10)
-                );
-            });
-
-        })
-        .catch(error => console.error('Permission loading error:', error));
-}
+      fetch("<?= base_url('get_role_permissions') ?>?role_id=" + encodeURIComponent(roleId))
+          .then(function(response) {
+              if (!response.ok) throw new Error('Request failed');
+              return response.json();
+          })
+          .then(function(permissionIds) {
+              const selectedIds = permissionIds.map(function(id) { return parseInt(id, 10); });
+              document.querySelectorAll('.role-permission').forEach(function(box) {
+                  box.checked = selectedIds.includes(parseInt(box.value, 10));
+              });
+          })
+          .catch(function(error) {
+              console.error('Permission loading error:', error);
+          });
   }
   </script>
 

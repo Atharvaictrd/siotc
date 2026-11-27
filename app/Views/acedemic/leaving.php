@@ -92,7 +92,7 @@
 <div id="content" class="app-content">
 <div class="row">
 <div class="col-xl-12">
-<?php if($success): ?>
+<?php if (!empty($success)): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
        <?php
         foreach($success as $key => $val)
@@ -104,7 +104,7 @@
     </div>
 <?php endif; ?>
 
-<?php if($error): ?>
+<?php if (!empty($error)): ?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <?php
         foreach($error as $key => $val)

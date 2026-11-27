@@ -484,10 +484,117 @@ public function student_admission_form($student_admission_id){
 	
 	
 // 	Fees
-		public function fees_report()
-	{
-	   return view('acedemic/fees_report');  
-	}
+public function fees_report()
+{
+    $adminId = session()->get('adminloggedid');
+
+    $db = \Config\Database::connect();
+
+    // Assigned active roles
+    $roles = $db->table('user_roles ur')
+        ->select('r.role_id, r.role_name')
+        ->join('roles r', 'r.role_id = ur.role_id')
+        ->where('ur.user_id', $adminId)
+        ->where('r.status', 1)
+        ->get()
+        ->getResultArray();
+
+    $roleIds = array_map('intval', array_column($roles, 'role_id'));
+
+    // Super Admin check
+    $isSuperAdmin = false;
+
+    foreach ($roles as $role) {
+        $roleName = strtolower(
+            preg_replace('/[\s_-]+/', '', $role['role_name'])
+        );
+
+        if ($roleName === 'superadmin') {
+            $isSuperAdmin = true;
+            break;
+        }
+    }
+
+    // Fees Report child module keys
+    $feesPages = [
+        'scholarship_section',
+        'fees_collection',
+        'bus_fees_collection',
+        'collect_other_fees',
+        'management_concession',
+        'change_student_category',
+        'change_student_fees_structure',
+        'fees_report_page'
+    ];
+
+    $data['allowedFeesPages'] = [];
+
+    if ($isSuperAdmin) {
+
+        foreach ($feesPages as $key) {
+            $data['allowedFeesPages'][$key] = true;
+        }
+
+    } else {
+
+        // Role-based View permissions
+        $rolePermissionIds = [];
+
+        if (!empty($roleIds)) {
+            $rolePermissionRows = $db->table('role_permissions')
+                ->select('permission_id')
+                ->whereIn('role_id', $roleIds)
+                ->get()
+                ->getResultArray();
+
+            $rolePermissionIds = array_map(
+                'intval',
+                array_column($rolePermissionRows, 'permission_id')
+            );
+        }
+
+        // User-specific permission overrides
+        $userOverrides = $db->table('user_permissions')
+            ->select('permission_id, permission_status')
+            ->where('user_id', $adminId)
+            ->get()
+            ->getResultArray();
+
+        $overrideMap = [];
+
+        foreach ($userOverrides as $override) {
+            $overrideMap[(int) $override['permission_id']] =
+                (int) $override['permission_status'];
+        }
+
+        // Get child module View permissions
+        $permissions = $db->table('modules m')
+            ->select('m.module_key, p.permission_id')
+            ->join('permissions p', 'p.module_id = m.module_id')
+            ->whereIn('m.module_key', $feesPages)
+            ->where('p.action_name', 'view')
+            ->where('m.status', 1)
+            ->get()
+            ->getResultArray();
+
+        foreach ($permissions as $permission) {
+
+            $permissionId = (int) $permission['permission_id'];
+            $moduleKey = $permission['module_key'];
+
+            // User override takes priority over role permission
+            if (array_key_exists($permissionId, $overrideMap)) {
+                $allowed = ($overrideMap[$permissionId] === 1);
+            } else {
+                $allowed = in_array($permissionId, $rolePermissionIds, true);
+            }
+
+            $data['allowedFeesPages'][$moduleKey] = $allowed;
+        }
+    }
+
+    return view('acedemic/fees_report', $data);
+}
 	
 		public function fees_program()
 	{
@@ -678,11 +785,20 @@ public function create_user()
         ->get()
         ->getResultArray();
 
-$data['permissions'] = $this->db->table('permissions p')
+$feesReportModuleId = $this->getFeesReportModuleId();
+$permissionQuery = $this->db->table('permissions p')
     ->select('p.permission_id, p.module_id, p.action_name')
     ->join('modules m', 'm.module_id = p.module_id')
     ->where('m.status', 1)
-    ->where('m.route IS NOT NULL', null, false)
+    ->groupStart()
+    ->where('m.route IS NOT NULL', null, false);
+
+if ($feesReportModuleId !== null) {
+    $permissionQuery->orWhere('m.parent_id', $feesReportModuleId);
+}
+
+$data['permissions'] = $permissionQuery
+    ->groupEnd()
     ->whereNotIn('m.module_key', [
         'user_management',
         'roles_permissions',
@@ -881,45 +997,45 @@ public function save_user()
 }
 
 
-public function update_password(){
-	 $validation = $this->validate([
-            'username' => [
-                'rules'  => 'required',
-                'errors' => [
-                    'required' => 'Username is required',
-                ],
-            ],
-            'password' => [
-                'rules'  => 'required',
-                'errors' => [
-                    'required' => 'Password is required',
-                ],
-            ],
-            'conf_password' => [
-                'rules'  => 'required',
-                'errors' => [
-                    'required' => 'Password is required',
-                ],
-            ],
-            
+public function update_password()
+{
+    $adminId = (int) session()->get('adminloggedid');
+    
+
+    $permissionService = new \App\Libraries\PermissionService($this->db);
+    if (!$permissionService->hasPermission('forgot_password_link', 'edit', $adminId)) {
+        return redirect()->back()->with(
+            'select_fail',
+            'You do not have permission to change password.'
+        );
+    }
+
+    // Validation
+$validation = $this->validate([
+    'password' => [
+        'rules' => 'required|exact_length[6]|numeric',
+    ],
+    'conf_password' => [
+        'rules' => 'required|matches[password]',
+    ],
+]);
+
+    if (!$validation) {
+        return view('forget_password', [
+            'validation' => $this->validator
+        ]);
+    }
+
+    $password = $this->request->getPost('password');
+
+    $this->db->table('user')
+        ->where('user_id', $adminId)
+        ->update([
+            'password' =>  $password
         ]);
 
-        if (!$validation) {
-            // echo "not validated";
-            
-            $data['validation'] = $this->validator;
-            return view('forget_password', $data);
-        }else{
-            $username = $this->request->getVar('username');
-            $password = $this->request->getVar('password');
-            $id=$_SESSION['adminloggedid'];
-              $query=$this->db->query("UPDATE `user` SET `password`='$password' WHERE `user_id`='$id'");
-               if (!$query) {
-                    return  redirect()->back->with('fail', 'Failed to Add !.');
-                } else {
-                    return  redirect()->to('forget_password')->with('success', 'Password Changed successfully !.');
-                }
-        }
+    return redirect()->to('forget_password')
+        ->with('success', 'Password Changed successfully!');
 }
 	public function permission_panel()
 	{
@@ -1498,6 +1614,7 @@ public function forget_password()
 public function create_role()
 {
     $roleId = $this->request->getGet('role_id');
+    $feesReportModuleId = $this->getFeesReportModuleId();
 
     $data['roles'] = $this->db->table('roles')
         ->orderBy('role_id', 'DESC')
@@ -1506,10 +1623,18 @@ public function create_role()
 
     // Active pages with parent names
 // Active pages excluding User Management
-$data['modules'] = $this->db->table('modules m')
+$moduleQuery = $this->db->table('modules m')
     ->select('m.module_id, m.module_name, m.route, m.parent_id, p.module_name AS parent_name')
     ->join('modules p', 'p.module_id = m.parent_id', 'left')
-    ->where('m.route IS NOT NULL', null, false)
+    ->groupStart()
+    ->where('m.route IS NOT NULL', null, false);
+
+if ($feesReportModuleId !== null) {
+    $moduleQuery->orWhere('m.parent_id', $feesReportModuleId);
+}
+
+$data['modules'] = $moduleQuery
+    ->groupEnd()
     ->where('m.status', 1)
     ->whereNotIn('m.module_key', [
         'user_management',
@@ -1978,11 +2103,21 @@ public function edit_user($id)
 
     $data['selectedRole'] = $userRole['role_id'] ?? '';
 
+    $feesReportModuleId = $this->getFeesReportModuleId();
+
     // Active modules with parent names
-    $data['modules'] = $this->db->table('modules m')
+    $moduleQuery = $this->db->table('modules m')
         ->select('m.module_id, m.module_name, m.module_key, m.route, m.parent_id, p.module_name AS parent_name')
         ->join('modules p', 'p.module_id = m.parent_id', 'left')
-        ->where('m.route IS NOT NULL', null, false)
+        ->groupStart()
+        ->where('m.route IS NOT NULL', null, false);
+
+    if ($feesReportModuleId !== null) {
+        $moduleQuery->orWhere('m.parent_id', $feesReportModuleId);
+    }
+
+    $data['modules'] = $moduleQuery
+        ->groupEnd()
         ->where('m.status', 1)
         ->whereNotIn('m.module_key', [
             'user_management',
@@ -1994,10 +2129,18 @@ public function edit_user($id)
         ->get()
         ->getResultArray();
 
-    $data['permissions'] = $this->db->table('permissions p')
+    $permissionQuery = $this->db->table('permissions p')
         ->select('p.permission_id, p.module_id, p.action_name')
         ->join('modules m', 'm.module_id = p.module_id')
-        ->where('m.route IS NOT NULL', null, false)
+        ->groupStart()
+        ->where('m.route IS NOT NULL', null, false);
+
+    if ($feesReportModuleId !== null) {
+        $permissionQuery->orWhere('m.parent_id', $feesReportModuleId);
+    }
+
+    $data['permissions'] = $permissionQuery
+        ->groupEnd()
         ->where('m.status', 1)
         ->whereNotIn('m.module_key', [
             'user_management',
@@ -2300,13 +2443,34 @@ public function delete_user($id)
     }
 }
 
+private function getFeesReportModuleId(): ?int
+{
+    $module = $this->db->table('modules')
+        ->select('module_id')
+        ->where('module_key', 'fees_report')
+        ->where('status', 1)
+        ->get()
+        ->getRowArray();
+
+    return $module === null ? null : (int) $module['module_id'];
+}
+
 private function getAssignablePermissionIds(): array
 {
-    $rows = $this->db->table('permissions p')
+    $feesReportModuleId = $this->getFeesReportModuleId();
+    $permissionQuery = $this->db->table('permissions p')
         ->select('p.permission_id')
         ->join('modules m', 'm.module_id = p.module_id')
         ->where('m.status', 1)
-        ->where('m.route IS NOT NULL', null, false)
+        ->groupStart()
+        ->where('m.route IS NOT NULL', null, false);
+
+    if ($feesReportModuleId !== null) {
+        $permissionQuery->orWhere('m.parent_id', $feesReportModuleId);
+    }
+
+    $rows = $permissionQuery
+        ->groupEnd()
         ->whereNotIn('m.module_key', [
             'user_management',
             'roles_permissions',
