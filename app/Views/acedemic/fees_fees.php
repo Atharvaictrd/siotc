@@ -129,13 +129,11 @@ Student Name</b></div>
 <?php if(isset($_POST['search']) && $_POST['search']=='View'){ ?>
 <?php 
 
-                                    foreach ($source  as $fees_collection) {
-                                    
-                                        ?>
-                                        <?php
-                                        
-                                    }
-                                    // echo $fees_collection->program;
+                                    $fees_collection = $source[0] ?? null;
+?>
+<?php if($fees_collection === null){ ?>
+<p>Data Not Found!</p>
+<?php } else {
                                      $query13= $db->query("SELECT * FROM class WHERE class_id='".$fees_collection['program']."' ");
 //  $data5['source']=$query3->getResultArray();
 // }
@@ -206,6 +204,8 @@ Student Name</b></div>
 				$count=1;
 				$Actual_Amount=0;
 				$paid_Amount=0;
+				$paid_scholarship = (float) ($fees_collection['paid_scholarship'] ?? 0);
+				$balance_scholarship = (float) ($fees_collection['actual_scholarship'] ?? 0) - $paid_scholarship;
 				foreach($fees_data as $key=>$value){
 				   
 				
@@ -359,8 +359,9 @@ Student Name</b></div>
 
 </tbody>
 </table>
+<?php if (!empty($canAddFeesCollection)): ?>
 
-<h5> Payment Mode :</h5>
+    <h5>Payment Mode :</h5>
 <div class="tabs">
      <a class="tablinks btn btn-primary active" onclick="openTab(event, 'tab1')">UPI</a>
   <a class="tablinks btn btn-primary " onclick="openTab(event, 'tab2')">Cheque</a>
@@ -461,13 +462,18 @@ Student Name</b></div>
       </div>
     </div>
     <br>
-    <div class="tabs">
+     <div class="tabs">
         <input type="submit" value="Save" class="btn btn-primary" name="a_save">
-        <input type="button" class="btn btn-primary" value="Cancel" name="Cancel" onclick="window.location.href='<?php echo $_SERVER['PHP_SELF'];?>'">
-  <!--   <a class="tablinks btn btn-primary active" onclick="openTab(event, 'tab1')">UPI</a>-->
-  <!--<a class="tablinks btn btn-primary " onclick="openTab(event, 'tab2')">Cheque</a>-->
-  <!--<a class="tablinks btn btn-primary" onclick="openTab(event, 'tab2')">Demand Draft </a>-->
-</div><br>
+
+        <input type="button"
+               class="btn btn-primary"
+               value="Cancel"
+               name="Cancel"
+               onclick="window.location.href='<?php echo $_SERVER['PHP_SELF'];?>'">
+    </div>
+
+<?php endif; ?>
+<br>
     </form>
 </div>
 
@@ -482,7 +488,7 @@ Student Name</b></div>
 <?php }elseif($fees_collection['reg_no']!='DBN1001'){ ?>
 
 <p>Data Not Found!</p>
-<?php } }?>
+<?php } } }?>
 </div>
 
 </div>

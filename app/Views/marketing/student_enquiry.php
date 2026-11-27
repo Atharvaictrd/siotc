@@ -282,8 +282,10 @@ if($row2->program_sem == 'Sem I' || $row2->program_sem == 'DIR II Year'){
 <div class="form-group row">
 <label class="col-lg-4 col-form-label form-label">&nbsp;</label>
 <div class="col-lg-6">
+<?php if (!empty($canAddStudentEnquiry)): ?>
 <button type="submit" class="btn btn-primary">Submit</button>
 <button type="reset" class="btn btn-primary">Cancel</button>
+<?php endif; ?>
 </div>
 </div>
 </form>
@@ -369,7 +371,10 @@ ORDER BY enquiry_no DESC");
                             <tr bgcolor="<?php echo($count%2==0)?'#ffffff':'#ffffff';?>">
                               <td style="white-space:nowrap;">
                                   <!--<a href="id=<?php echo $fees_collection->enquiry_no;?>" ><i class="fa fa-pen-to-square" style="color:blue;font-size:20px;"></i></a> / -->
-                              <a href="<?php echo base_url('delete_enquiry/'.$fees_collection->enquiry_no); ?>" onclick="return confirm('Are you sure you want to reset this data?');"><i class="fa fa-trash-can" style="color:red;font-size:20px;"></i></a></td>
+                              <?php if (!empty($canDeleteStudentEnquiry)): ?>
+                              <a href="<?php echo base_url('delete_enquiry/'.$fees_collection->enquiry_no); ?>" onclick="return confirm('Are you sure you want to reset this data?');"><i class="fa fa-trash-can" style="color:red;font-size:20px;"></i></a>
+                              <?php endif; ?>
+                              </td>
                               <td ><?php echo $fees_collection->enquiry_date;?></td>
                               <td ><?php echo $fees_collection->enquiry_no;?></td>
                               <td style="white-space:nowrap;"><span style="white-space:nowrap;text-transform:uppercase;"><?php echo $fees_collection->gender.'.'.$fees_collection->f_name.' '.$fees_collection->m_name.' '.$fees_collection->l_name?></span></td>

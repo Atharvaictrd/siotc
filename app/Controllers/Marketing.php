@@ -59,11 +59,21 @@ class Marketing extends BaseController
 // 	}
 	
 	public function delete_enquiry($id){
-	   // 	$id = $this->request->getVar('id');
-		$model = new MarketingModel();
-		$data['user'] = $model->where('enquiry_no', $id)->delete();
-        $msg = 'Deleted !!!';
-		return redirect()->to( base_url('student_enquiry') )->with('error', $msg);
+        return $this->removeEnquiry($id, 'student_enquiry');
+    }
+
+    public function delete_list_student_enquiry($id)
+    {
+        return $this->removeEnquiry($id, 'list_student_enquiry');
+    }
+
+    private function removeEnquiry($id, string $redirectPath)
+    {
+        $model = new MarketingModel();
+        $model->where('enquiry_no', $id)->delete();
+
+        return redirect()->to(base_url($redirectPath))
+            ->with('error', 'Deleted !!!');
     }
     
     public function search_enquiry(){
@@ -101,6 +111,17 @@ if(!empty($enquiry_no)){
     $query2= $this->db->query("SELECT * FROM marketing_enquiry ORDER BY enquiry_no DESC");
  $data['source']=$query2->getResultArray();
 }
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        $data['canAddListStudentEnquiry'] = $permissions->hasPermission(
+            'list_student_enquiry',
+            'add',
+            session()->get('adminloggedid')
+        );
+        $data['canDeleteListStudentEnquiry'] = $permissions->hasPermission(
+            'list_student_enquiry',
+            'delete',
+            session()->get('adminloggedid')
+        );
     	 foreach($data['source'] as $key => $value):
             //  $cat_id = $row['id'];
             // print_r($value);

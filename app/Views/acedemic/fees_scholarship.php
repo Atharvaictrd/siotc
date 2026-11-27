@@ -148,27 +148,30 @@ $n=1;
                                         ?>
 <tr>
 
-<td> <?= $n++.$row['student_admission_id ']; ?></td>
+<td> <?= $n++.$row['student_admission_id']; ?></td>
 <td><?= $row['salutation'].' '.$row['first_name'].' '.$row['middle_name'].' '.$row['last_name']; ?> </td>
 <td><?= $row['category']; ?></td>
 <td><?= $row['reference_details']; ?></td>
-<td valign="middle" align="center">
-    <?php
-     if ($row['scholarship_status'] == 1) { ?>
-                            <label class="switch">
-                                    <input id="status" type = "checkbox"  eid="<?php echo $row['student_admission_id']; ?>" checked>
-                                    <span class = "slider round" > </span>
-                                </label>
-                           <?php
-                        } else { ?>
-                             <label class="switch">
-                                    <input id="status" type = "checkbox" eid="<?php echo $row['student_admission_id']; ?>"  >
-                                    <span class = "slider round" > </span>
-                                </label>
-                            
-                     <?php   } ?>
-                    </td>
+<?php if ($canEditScholarship): ?>
 
+<td valign="middle" align="center">
+    <label class="switch">
+        <input
+            type="checkbox"
+            eid="<?= $row['student_admission_id']; ?>"
+            <?= $row['scholarship_status'] == 1 ? 'checked' : ''; ?>
+        >
+        <span class="slider round"></span>
+    </label>
+</td>
+
+<?php else: ?>
+
+<td valign="middle" align="center">
+    <?= $row['scholarship_status'] == 1 ? 'Active' : 'Inactive'; ?>
+</td>
+
+<?php endif; ?>
 </tr>
 <?php endforeach; ?>
 </tbody>

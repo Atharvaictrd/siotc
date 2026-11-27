@@ -21,6 +21,7 @@ use CodeIgniter\Router\RouteCollection;
     $routes->match(['get','post'],'/section', 'Admin::section', ['as' => 'section']);
     $routes->match(['get','post'],'/list_student_enquiry', 'Admin::list_student_enquiry', ['as' => 'list_student_enquiry']);
     $routes->get('delete_enquiry/(:num)', 'Marketing::delete_enquiry/$1');
+    $routes->get('delete_list_student_enquiry/(:num)', 'Marketing::delete_list_student_enquiry/$1');
     $routes->post('/create_enquiry', 'Marketing::create_enquiry', ['as' => 'marketing.create_enquiry']);
     $routes->post('/create_prospect', 'Prospectus::create_prospect', ['as' => 'prospectus.create_prospect']);
     $routes->get('delete_prospect', 'Prospectus::delete_prospect');
@@ -328,7 +329,9 @@ use CodeIgniter\Router\RouteCollection;
     $routes->match(['get','post'],'/masters/update_fee_program_list', 'Masters::update_fee_program_list');
     
     //Delete data
-    $routes->match(['get','post'],'/delete_fees/(:num)', 'DeleteController::delete_fees/$1');
+    $routes->match(['get','post'],'/delete_fees/(:num)', 'DeleteController::delete_fees/$1', [
+        'filter' => ['isAdminLoggedin', 'moduleViewPermission']
+    ]);
     $routes->match(['get','post'],'/delete_bus_fees/(:num)', 'DeleteController::delete_bus_fees/$1');
     $routes->match(['get','post'],'/delete_management/(:num)', 'DeleteController::delete_management/$1');
 

@@ -143,8 +143,9 @@
                   
 $groupedModules = [];
 $feesReportChildren = [];
+$reportPageChildren = [];
 
-// Collect permission-only pages directly under Fees Report.
+// Collect direct children of Fees Report.
 foreach ($modules as $module) {
     $parentId = (int) ($module['parent_id'] ?? 0);
 
@@ -154,6 +155,15 @@ foreach ($modules as $module) {
         isset($permissionMap[$module['module_id']])
     ) {
         $feesReportChildren[] = $module;
+    }
+
+    // Collect 8 report pages under Report.
+    if (
+        isset($moduleMap[$parentId]) &&
+        ($moduleMap[$parentId]['module_key'] ?? '') === 'fees_report_page' &&
+        isset($permissionMap[$module['module_id']])
+    ) {
+        $reportPageChildren[] = $module;
     }
 }
 
@@ -271,10 +281,15 @@ foreach ($groupedModules as $groupName => $groupModules) {
                                           <?php foreach ($groupModules as $branchModules): ?>
                                               <?php foreach ($branchModules as $module): ?>
                                                   <?php
-                                                      $rowsToRender = [$module];
-                                                      if (($module['module_key'] ?? '') === 'fees_report') {
-                                                          $rowsToRender = array_merge($rowsToRender, $feesReportChildren);
-                                                      }
+                                                     $rowsToRender = [$module];
+
+if (($module['module_key'] ?? '') === 'fees_report') {
+    $rowsToRender = array_merge($rowsToRender, $feesReportChildren);
+}
+
+if (($module['module_key'] ?? '') === 'fees_report_page') {
+    $rowsToRender = array_merge($rowsToRender, $reportPageChildren);
+}
                                                   ?>
                                                   <?php foreach ($rowsToRender as $rowModule): ?>
                                                       <tr>

@@ -53,7 +53,7 @@ if(isset($_POST['search'])){
     // $stud_query = $db->query("SELECT * FROM `student_admission_information`");
 }
 
-if(isset($_POST['Submit_data']) && $_POST['Submit_data'] == 'Save information')
+if(isset($_POST['Submit_data']) && $_POST['Submit_data'] == 'Save information' && !empty($canAddStudentCategory))
 {
     
     $student_name_query = $db->query("SELECT * FROM student_admission_information WHERE reg_no='".($_POST['reg_no'] ?? '')."' AND session_year='".($_POST['session'] ?? '')."' AND  active_status = 0 ");
@@ -190,9 +190,8 @@ Session</b></div>
 
 <?php if(isset($_POST['search']) && $_POST['search']=='View'){ 
     // print_r($stud_query);
-     if($stud_query== true){
-foreach ($stud_query->getResult() as $fees_collection) {
-}
+     if($stud_query && $stud_query->getNumRows() > 0){
+        $fees_collection = $stud_query->getRow();
 ?>
 <div class="col-xl-12" >
 
@@ -236,6 +235,9 @@ $fees_data = explode(';',$row2->fee_component_id);
 				$count=0;
 				$Actual_Amount=0;
 				$paid_Amount=0;
+				$actual_scholarship = (float) ($fees_collection->actual_scholarship ?? 0);
+				$paid_scholarship = (float) ($fees_collection->paid_scholarship ?? 0);
+				$balance_scholarship = $actual_scholarship - $paid_scholarship;
 				$total_amount = 0;
 				foreach($fees_data as $key=>$value){
 				   
@@ -249,7 +251,6 @@ $fees_data = explode(';',$row2->fee_component_id);
 				
 					$fees_detail_query3 = $db->query("SELECT * FROM fee_components WHERE fee_component_id='$component' and session = '".$fees_collection->session_year."'  ");
 		 foreach ($fees_detail_query3->getResult() as $row3) {
-		     $c=$fees_collection->category;	
 		 $cmpid=$row3->fee_component_id;
 		 $f_com_id=$row3->fee_component_id;
 		 }
@@ -267,37 +268,42 @@ $fees_data = explode(';',$row2->fee_component_id);
 <tbody>
    	<tr align="center">
 				
-				<td align="center"><font color="#FF0000" size="+2"><?php echo $actual_fees = number_format(($Actual_Amount+$fees_collection->actual_scholarship),2);?></font><input type="hidden" name="Actual_amount" id="Actual_amount" value="<?php echo $actual_fees; ?>" /></td>
+				<td align="center"><font color="#FF0000" size="+2"><?php echo $actual_fees = number_format(($Actual_Amount+$actual_scholarship),2);?></font><input type="hidden" name="Actual_amount" id="Actual_amount" value="<?php echo $actual_fees; ?>" /></td>
 				<td align="center"><font color="#FF0000" size="+2"><?php echo number_format(($paid_Amount+$paid_scholarship),2);?></font></td>
 				<td align="center"><font color="#FF0000" size="+2"><?php 
 				$toal_bal_amount = $Actual_Amount-$paid_Amount;
 				echo number_format((($toal_bal_amount+$balance_scholarship)),2); ?><input type="hidden" name="Balance_amount" id="Balance_amount" value="<?php echo $amt =  $toal_bal_amount+$balance_scholarship; ?>" /></font></td>
+        <?php if (!empty($canAddStudentCategory)): ?>
 						   <td><select name="category" id="category" class="form-control" required>
        
-            <option value="<?php echo $c2;?>" selected><?php echo $c2;?></option>
+            <option value="<?php echo $fees_collection->category;?>" selected><?php echo $fees_collection->category;?></option>
             <?php	 $query1= $db->query("SELECT * FROM student_category ");
 
 	foreach($query1->getResult() as $value1){ ?>
-<option value="<?= $value1->category ?>" id="<?= $value1->category ?>" <?php if($value1->category==$c){ ?> selected <?php } ?>><?=$value1->category?></option>
+<option value="<?= $value1->category ?>" id="<?= $value1->category ?>" <?php if($value1->category==$fees_collection->category){ ?> selected <?php } ?>><?=$value1->category?></option>
 	
 <?php } ?></td> 
  <td><select name="category_change" id="category_change" class="form-control" required>
        
-            <option value="<?php echo $c2;?>" selected><?php echo $c2;?></option>
+            <option value="<?php echo $fees_collection->category;?>" selected><?php echo $fees_collection->category;?></option>
             <?php	 $query1= $db->query("SELECT * FROM student_category ");
 
 	foreach($query1->getResult() as $value1){  ?>
-<option value="<?= $value1->category ?>" id="<?= $value1->category ?>" <?php if($value1->category==$c){ ?> selected <?php } ?>><?=$value1->category?></option>
+<option value="<?= $value1->category ?>" id="<?= $value1->category ?>" <?php if($value1->category==$fees_collection->category){ ?> selected <?php } ?>><?=$value1->category?></option>
 	
 <?php	} ?></td> 
-
+<?php else: ?>
+    <td><?= esc($fees_collection->category); ?></td>
+    <td></td>
+<?php endif; ?>
                		   
 
                 </tr>
-			
+			<?php if (!empty($canAddStudentCategory)): ?>
 			<tr>
 		<td align="center" colspan="5"><input type="submit" name="Submit_data" value="Save information" style="height:30px; background-color: #0C6; width:150px; font:'Comic Sans MS', cursive; size:100px; border-radius: 20px;" /></td>
 			</tr>		
+      <?php endif; ?>
 </tbody>
 </table></form>
 </div>

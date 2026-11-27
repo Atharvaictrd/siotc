@@ -5,7 +5,7 @@
 
 <?= $this->section('content') ?>
 <?php
-if(isset($_POST['Submit_data']) && $_POST['Submit_data'] == 'Save information'){
+if(isset($_POST['Submit_data']) && $_POST['Submit_data'] == 'Save information' && !empty($canAddBusFeesCollection)){
 	$db  = \Config\Database::connect();
 	$fees_detail_query = $db->query("SELECT * FROM bus_fees WHERE  reg_no='".($_POST['reg_no1'] ?? '')."' and session = '".($_POST['session1'] ?? '')."'");
 	$rows =$fees_detail_query->getNumRows();
@@ -83,6 +83,11 @@ Bus Fees Consession</h3>
                         <?php if (isset($_SESSION['error'])) : ?>
                             <div class="alert alert-danger my-5">
                                 <h5><?=$_SESSION['error'];?></h5>
+                            </div>
+                        <?php endif; ?>
+                        <?php if (isset($_POST['Submit_data']) && empty($canAddBusFeesCollection)) : ?>
+                            <div class="alert alert-danger my-5">
+                                <h5>You do not have permission to add bus fee collection.</h5>
                             </div>
                         <?php endif; ?>
 <form class="form-horizontal" data-parsley-validate="true" name="demo-form" method="post">
@@ -188,12 +193,7 @@ Bus Fees Consession</h4>
 	<?php
 			//student_admission_fee Detail
 			$fees_detail_query =  $db->query("SELECT * FROM bus_fees WHERE  reg_no='".($_POST['reg_no'] ?? '')."' and session = '".($_POST['session'] ?? '')."'");
-
-			 foreach ($fees_detail_query->getResult() as $fees_detail_data) {
-
-		
-	
-			 }
+			$fees_detail_data = $fees_detail_query->getRow();
 			$reg_no=($_POST['reg_no'] ?? '');
 			$session=($_POST['session'] ?? '');
 			 
@@ -208,13 +208,11 @@ Bus Fees Consession</h4>
 				$count=0;
 				// $Actual_Amount=0;
 				$paid_Amount=0;
+				$Actual_Amount = (float) ($fees_detail_data->amount ?? 0);
+				$actual_scholarship = (float) ($fees_collection->actual_scholarship ?? 0);
+				$paid_scholarship = (float) ($fees_collection->paid_scholarship ?? 0);
+				$balance_scholarship = $actual_scholarship - $paid_scholarship;
 				// foreach($fees_data as $key=>$value){
-						$Actual_Amount1= $fees_detail_data->amount;
-						if(empty($Actual_Amount1)){
-						    $Actual_Amount=0;
-						}else{
-						    $Actual_Amount= $fees_detail_data->amount;
-						}
 				$count++;
 				// if(!empty($Actual_Amount)){
 				// list($component,$amount)=explode('_',$value);
@@ -232,12 +230,12 @@ Bus Fees Consession</h4>
 			</tr>
 				<tr>
 				
-				<td align="center"><font color="#FF0000" size="+2"><?php echo $actual_fees = number_format(($Actual_Amount+$row1->actual_scholarship),2);?></font><input type="hidden" name="Actual_amount" id="Actual_amount" value="<?php echo $actual_fees; ?>" /></td>
+				<td align="center"><font color="#FF0000" size="+2"><?php echo $actual_fees = number_format(($Actual_Amount+$actual_scholarship),2);?></font><input type="hidden" name="Actual_amount" id="Actual_amount" value="<?php echo $actual_fees; ?>" /></td>
 				<td align="center"><font color="#FF0000" size="+2"><?php echo number_format(($paid_Amount+$paid_scholarship),2);?></font></td>
 				<td align="center"><font color="#FF0000" size="+2"><?php 
 				$toal_bal_amount = $Actual_Amount-$paid_Amount;
 				echo number_format((($toal_bal_amount+$balance_scholarship)),2); ?><input type="hidden" name="Balance_amount" id="Balance_amount" value="<?php echo $amt =  $toal_bal_amount+$balance_scholarship; ?>" /></font></td>
-				<td align="center"><input type="text" align="middle" name="consession_fee" id="consession_fee" value="<?php echo ($_POST['consession_fee'] ?? '')?>" onkeyup="sum();" />
+				<td align="center"><?php if (!empty($canAddBusFeesCollection)): ?><input type="text" align="middle" name="consession_fee" id="consession_fee" value="<?php echo ($_POST['consession_fee'] ?? '')?>" onkeyup="sum();" /><?php endif; ?>
                 
                 </tr>
 			
@@ -245,7 +243,9 @@ Bus Fees Consession</h4>
 			
 				
 </table>
+<?php if (!empty($canAddBusFeesCollection)): ?>
 <input type="submit" name="Submit_data" value="Save information" style="height:30px; background-color: #0C6; width:150px; font:'Comic Sans MS', cursive; size:100px; border-radius: 20px;" />
+<?php endif; ?>
 </form>
 </div>
 

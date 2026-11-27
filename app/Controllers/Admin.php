@@ -118,7 +118,19 @@ public function loginsubmit()
         // 	echo json_encode($id);
 	}
 	public function student_enquiry(){
-	   return view('marketing/student_enquiry');  
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        $data['canAddStudentEnquiry'] = $permissions->hasPermission(
+            'student_enquiry',
+            'add',
+            session()->get('adminloggedid')
+        );
+        $data['canDeleteStudentEnquiry'] = $permissions->hasPermission(
+            'student_enquiry',
+            'delete',
+            session()->get('adminloggedid')
+        );
+
+	   return view('marketing/student_enquiry', $data);
 	}
 	public function list_student_enquiry(){
 	   helper(['form', 'url']); 
@@ -155,6 +167,18 @@ public function loginsubmit()
             //  $cat_id = $row['id'];
             // print_r($value);
         endforeach;
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        $data['canAddListStudentEnquiry'] = $permissions->hasPermission(
+            'list_student_enquiry',
+            'add',
+            session()->get('adminloggedid')
+        );
+        $data['canDeleteListStudentEnquiry'] = $permissions->hasPermission(
+            'list_student_enquiry',
+            'delete',
+            session()->get('adminloggedid')
+        );
+
         return view('marketing/list_student_enquiry',$data);
 	}
 	public function list_student_area(){
@@ -605,6 +629,12 @@ public function fees_report()
 	    
 	     $query2= $this->db->query("SELECT * FROM student_admission_information ORDER BY student_admission_id  DESC");
  $data['source']=$query2->getResultArray();
+         $permissions = new \App\Libraries\PermissionService($this->db);
+         $data['canEditScholarship'] = $permissions->hasPermission(
+             'scholarship_section',
+             'edit',
+             session()->get('adminloggedid')
+         );
 
     	 foreach($data['source'] as $key => $value):
            
@@ -614,7 +644,14 @@ public function fees_report()
 	
 		public function fees_bus()
 	{
-	   return view('acedemic/fees_bus');  
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        $data['canAddBusFeesCollection'] = $permissions->hasPermission(
+            'bus_fees_collection',
+            'add',
+            session()->get('adminloggedid')
+        );
+
+	   return view('acedemic/fees_bus', $data);
 	}
 		public function fees_collect()
 	{
@@ -624,15 +661,39 @@ public function fees_report()
 	{
 	   return view('acedemic/fees_management');  
 	}
-		public function fees_category()
-	{
-	   return view('acedemic/fees_category');  
-	}
+public function fees_category()
+{
+    $permissions = new \App\Libraries\PermissionService($this->db);
+    $data['canAddStudentCategory'] = $permissions->hasPermission(
+        'change_student_category',
+        'add',
+        session()->get('adminloggedid')
+    );
+
+    return view('acedemic/fees_category', $data);
+}
 		public function fees_structure()
 	{
-	   return view('acedemic/fees_structure');  
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        $data['canAddFeesStructure'] = $permissions->hasPermission(
+            'change_student_fees_structure',
+            'add',
+            session()->get('adminloggedid')
+        );
+
+		   return view('acedemic/fees_structure', $data);
 	}
 	public function change_fee_structure($student_admission_id){
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        if (!$permissions->hasPermission(
+            'change_student_fees_structure',
+            'add',
+            session()->get('adminloggedid')
+        )) {
+            return redirect()->to(base_url(route_to('fees_structure')))
+                ->with('error', 'You do not have permission to change student fees structure.');
+        }
+
 	    $db = \Config\Database::connect();
 
     // Step 1: Retrieve the fee component data from the form
@@ -662,18 +723,33 @@ if($update){
     return redirect()->to('fees_report/fees_structure')->with('success', 'Fees structure changed successfully');
 }
 	}
-		public function fees_report2()
-	{
-	   return view('acedemic/fees_report2');  
-	}
-	
-	
-	
-	
-	
-	
-	
+public function fees_report2()
+{
+    $permissions = new \App\Libraries\PermissionService($this->db);
 
+    $reportModules = [
+        'daily_collection_report',
+        'bus_collection_report',
+        'student_fees_report',
+        'balance_student_report',
+        'balance_bus_report',
+        'balance_only_outstanding',
+        'fees_concession_report',
+        'bus_fees_report'
+    ];
+
+    $data['allowedReports'] = [];
+
+    foreach ($reportModules as $moduleKey) {
+        $data['allowedReports'][$moduleKey] = $permissions->hasPermission(
+            $moduleKey,
+            'view',
+            session()->get('adminloggedid')
+        );
+    }
+
+    return view('acedemic/fees_report2', $data);
+}
 	
 		public function leaving()
 	{
@@ -1523,7 +1599,14 @@ if(($search !='')){
     
     public function daily_collection_report()
 	{
-	   return view('acedemic/daily_collection_report');  
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        $data['canDeleteFees'] = $permissions->hasPermission(
+            'fees_report',
+            'delete',
+            session()->get('adminloggedid')
+        );
+
+	   return view('acedemic/daily_collection_report', $data);
 	}
 	public function Bus_collection_report()
 	{

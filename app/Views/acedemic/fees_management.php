@@ -116,19 +116,18 @@ Student Name</b></div>
 <?php if(isset($_POST['search']) && $_POST['search']=='View'){ ?>
 <?php 
 
-                                    foreach ($source  as $fees_collection) {
-                                    
-                                        ?>
-                                        <?php
-                                        $student_id=$fees_collection['student_admission_id'];
-			$reg_no=$fees_collection['reg_no'];
-                                        
-                                    }
-                                     $paid_consession_query = $db->query("SELECT * FROM management_consession WHERE student_admission_id='".$student_id."' AND session_year = '".$fees_collection['session_year']."'");
+                                    $fees_collection = $source[0] ?? null;
+?>
+<?php if($fees_collection === null){ ?>
+<p>Data Not Found!</p>
+<?php } else {
+    $student_id = $fees_collection['student_admission_id'];
+    $reg_no = $fees_collection['reg_no'];
+    $paid_consession_query = $db->query("SELECT * FROM management_consession WHERE student_admission_id='".$student_id."' AND session_year = '".$fees_collection['session_year']."'");
 					$consession= 0;
+                    $has_consession = $paid_consession_query->getNumRows() > 0;
 				foreach ($paid_consession_query->getResult() as $paid_consession_data) {
 				     $consession = $consession+$paid_consession_data->consession_amount;
-				     $sid=$paid_consession_data->student_admission_id;
 					}
 			 $query13= $db->query("SELECT * FROM class WHERE class_id='".$fees_collection['program']."' ");
 //  $data5['source']=$query3->getResultArray();
@@ -143,7 +142,7 @@ Student Name</b></div>
 ?>
 
 <?php if(($fees_collection['active_status']==0)){ 
-if(($student_id==$sid)){
+if($has_consession){
 
 ?>
 <div class="alert alert-danger my-5">
@@ -169,6 +168,7 @@ if(($student_id==$sid)){
          <p><b>Class :</b>  <?php echo $program1; ?></p>
           <p><b>Session :</b> <?php echo $fees_collection['session_year']; ?></p>
           <p><b>Semester :</b> <?php echo $fees_collection['semister']; ?></p>
+<?php if (!empty($canAddManagementConcession)): ?>
           <form action="<?php echo base_url('/fees_report/insert_management'); ?>" method="post">
               	<input type="hidden" value="<?php echo $fees_collection['student_admission_id'];?>" name="student_admission_id">
     	<input name="reg_no" ID="reg_no" type="hidden" id="registration_no" value="<?php echo $fees_collection['reg_no'];?>">
@@ -202,6 +202,9 @@ Fees Paid</th>
 				$count=0;
 				$Actual_Amount=0;
 				$paid_Amount=0;
+				$actual_scholarship = (float) ($fees_collection['actual_scholarship'] ?? 0);
+				$paid_scholarship = (float) ($fees_collection['paid_scholarship'] ?? 0);
+				$balance_scholarship = $actual_scholarship - $paid_scholarship;
 				foreach($fees_data as $key=>$value){
 					
 				$count++;
@@ -235,7 +238,7 @@ Fees Paid</th>
 				
 				<tr>
 				
-				<td align="center"><font color="#FF0000" size="+2"><?php echo $actual_fees = number_format(($Actual_Amount+$student_detail['actual_scholarship']),2);?></font><input type="hidden" name="Actual_amount" id="Actual_amount" value="<?php echo $actual_fees; ?>" /></td>
+				<td align="center"><font color="#FF0000" size="+2"><?php echo $actual_fees = number_format(($Actual_Amount+$actual_scholarship),2);?></font><input type="hidden" name="Actual_amount" id="Actual_amount" value="<?php echo $actual_fees; ?>" /></td>
 				<td align="center"><font color="#FF0000" size="+2"><?php echo number_format(($paid_Amount+$paid_scholarship),2);?></font></td>
 				<td align="center"><font color="#FF0000" size="+2"><?php 
 				$toal_bal_amount = $Actual_Amount-$paid_Amount;
@@ -258,6 +261,9 @@ Fees Paid</th>
 		
 </table>
 </form>
+<?php else: ?>
+    <div class="alert alert-info">You do not have permission to add management concession.</div>
+<?php endif; ?>
 </div>
 
 
@@ -273,7 +279,7 @@ Fees Paid</th>
 
 </div>
 
-<?php } } }?>
+<?php } } } }?>
 
 <a href="javascript:;" class="btn btn-icon btn-circle btn-theme btn-scroll-to-top" data-toggle="scroll-to-top"><i class="fa fa-angle-up"></i></a>
 

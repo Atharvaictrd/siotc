@@ -42,19 +42,46 @@ Reports</h3>
 
 
 <div class="panel-body">
-<p>1.<a href="<?=base_url();?>daily_collection_report" name="" style="color:blue;"> Daily Collection Report</a></p>
-<p>2.<a href="<?=base_url();?>bus_collection_report" name="" style="color:blue;"> Bus Collection Report</a></p>
-<p>3.<a href="<?=base_url();?>student_fees_report" name="" style="color:blue;"> Student Fees Report</a></p>
-<p>4.<a href="<?=base_url();?>balance_on_student" name="" style="color:blue;"> Balance On Student</a></p>
-<p>5.<a href="<?=base_url();?>balance_bus" name="" style="color:blue;"> Balance On Student (Bus)</a></p>
-<p>6.<a href="<?=base_url();?>balance_only_outstanding" name="" style="color:blue;"> Balance On Student (ONLY OUTSTANDING) NEW</a></p>
-<!--<p>7.<a href="<?=base_url();?>section_wise" name="" style="color:blue;"> Student Fees Report (SECTION WISE)</a></p>-->
-<p>7.<a href="<?=base_url();?>fees_consession_report" name="" style="color:blue;"> Fees Consession Report (Management Consession)</a></p>
-<!--<p>9.<a href="<?=base_url();?>balance_less_paid" name="" style="color:blue;"> Balance On Student (Less Paid) NEW</a></p>-->
-<!--<p>10.<a href="<?=base_url();?>scholarship_form_not_submitted_ref" name="" style="color:blue;"> Scholarship Form Not Submited</a></p>-->
-<!--<p>11.<a href="<?=base_url();?>scholarship_form_not_submitted" name="" style="color:blue;"> Scholarship Form Not Submited By Reference</a></p>-->
-<!--<p>12.<a href="<?=base_url();?>balance_student_reference" name="" style="color:blue;"> Balance of Student By Reference</a></p>-->
-<p>8.<a href="<?=base_url();?>bus_fees_report" name="" style="color:blue;"> Bus Fees Report</a></p>
+
+    <?php if (!empty($allowedReports['daily_collection_report'])): ?>
+        <p>1.<a href="<?=base_url();?>daily_collection_report" name="" style="color:blue;"> Daily Collection Report</a></p>
+    <?php endif; ?>
+
+    <?php if (!empty($allowedReports['bus_collection_report'])): ?>
+        <p>2.<a href="<?=base_url();?>bus_collection_report" name="" style="color:blue;"> Bus Collection Report</a></p>
+    <?php endif; ?>
+
+    <?php if (!empty($allowedReports['student_fees_report'])): ?>
+        <p>3.<a href="<?=base_url();?>student_fees_report" name="" style="color:blue;"> Student Fees Report</a></p>
+    <?php endif; ?>
+
+    <?php if (!empty($allowedReports['balance_student_report'])): ?>
+        <p>4.<a href="<?=base_url();?>balance_on_student" name="" style="color:blue;"> Balance On Student</a></p>
+    <?php endif; ?>
+
+    <?php if (!empty($allowedReports['balance_bus_report'])): ?>
+        <p>5.<a href="<?=base_url();?>balance_bus" name="" style="color:blue;"> Balance On Student (Bus)</a></p>
+    <?php endif; ?>
+
+    <?php if (!empty($allowedReports['balance_only_outstanding'])): ?>
+        <p>6.<a href="<?=base_url();?>balance_only_outstanding" name="" style="color:blue;"> Balance On Student (ONLY OUTSTANDING) NEW</a></p>
+    <?php endif; ?>
+
+    <!--<p>7.<a href="<?=base_url();?>section_wise" name="" style="color:blue;"> Student Fees Report (SECTION WISE)</a></p>-->
+
+    <?php if (!empty($allowedReports['fees_concession_report'])): ?>
+        <p>7.<a href="<?=base_url();?>fees_consession_report" name="" style="color:blue;"> Fees Consession Report (Management Consession)</a></p>
+    <?php endif; ?>
+
+    <!--<p>9.<a href="<?=base_url();?>balance_less_paid" name="" style="color:blue;"> Balance On Student (Less Paid) NEW</a></p>-->
+    <!--<p>10.<a href="<?=base_url();?>scholarship_form_not_submitted_ref" name="" style="color:blue;"> Scholarship Form Not Submited</a></p>-->
+    <!--<p>11.<a href="<?=base_url();?>scholarship_form_not_submitted" name="" style="color:blue;"> Scholarship Form Not Submited By Reference</a></p>-->
+    <!--<p>12.<a href="<?=base_url();?>balance_student_reference" name="" style="color:blue;"> Balance of Student By Reference</a></p>-->
+
+    <?php if (!empty($allowedReports['bus_fees_report'])): ?>
+        <p>8.<a href="<?=base_url();?>bus_fees_report" name="" style="color:blue;"> Bus Fees Report</a></p>
+    <?php endif; ?>
+
 </div>
 
 

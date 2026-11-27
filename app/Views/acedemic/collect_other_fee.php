@@ -114,14 +114,11 @@ Student Name</b></div>
 <?php if(isset($_POST['search']) && $_POST['search']=='View'){ ?>
 <?php 
 
-                                    foreach ($source  as $fees_collection) {
-                                    
-                                        ?>
-                                        <?php
-                                        
-                                    }
+                                    $fees_collection = $source[0] ?? null;
 ?>
-<?php if($fees_collection['active_status']==0){ ?>
+<?php if($fees_collection === null){ ?>
+<p>Data Not Found!</p>
+<?php } elseif($fees_collection['active_status']==0){ ?>
 <div class="col-xl-12" id="feesReport">
 
 <div class="panel panel-inverse">
@@ -139,6 +136,7 @@ Student Name</b></div>
           <p><b>Sem :</b>  <?php echo $fees_collection['semister']; ?></p>
           <p><b>Session :</b> <?php echo $fees_collection['session_year']; ?></p>
     </div>
+<?php if (!empty($canAddOtherFees)): ?>
 <form action="<?php echo base_url('insert_other_fees'); ?>" method="post">
     	<input type="hidden" value="<?php echo $fees_collection['student_admission_id'];?>" name="student_admission_id">
     	<input name="reg_no" ID="reg_no" type="hidden" id="registration_no" value="<?php echo $fees_collection['reg_no'];?>" >
@@ -245,6 +243,9 @@ Student Name</b></div>
       <!--</div>-->
     </div>
     </form>
+    <?php else: ?>
+        <div class="alert alert-info">You do not have permission to add other fees.</div>
+    <?php endif; ?>
 </div>
 <div class="hljs-wrapper">
 <pre><code class="html" data-url="<?= base_url('assets/data/table-manage/keytable.json'); ?>"></code></pre>

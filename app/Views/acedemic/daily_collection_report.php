@@ -213,7 +213,7 @@ foreach ($data_query->getResult() as $data) {
 			 ?>
 		
 					
-	<td><a href="delete_fees/<?php echo $fees_data->ID; ?>" onclick="return delete_confirm();" class="btn btn-xs btn-warning"  alt='Delete record'><i class="fa fa-trash" style="font-size:15px;color:red;"></i>	</a> /
+	<td><?php if (!empty($canDeleteFees)): ?><a href="delete_fees/<?php echo $fees_data->ID; ?>" onclick="return delete_confirm();" class="btn btn-xs btn-warning" alt="Delete record"><i class="fa fa-trash" style="font-size:15px;color:red;"></i></a> / <?php endif; ?>
 <a href="#" onClick="window.open('fees_report/print_slip?action=preview&id=<?php echo $fees_data->ID; ?>','','menubar=no,width=990px,height=550px,scrollbars=yes,toolbar=no,titlebar=no,status=no,minimize=false');"  alt='Admission Fee View' title="Admission Fee View" ><i class="fa fa-circle-info" style="font-size:20px;"></i></a>
 	</a></td>
 				

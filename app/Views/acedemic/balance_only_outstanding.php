@@ -181,7 +181,7 @@ Student Balance Report  (ONLY OUTSTANDING) </h4>
   <div id="mydiv" style="overflow-x: auto;">
       <table  width="100%">
           <?php
-          if($stud_query== true){
+          if($stud_query && $stud_query->getNumRows() > 0){
           ?>
         <tr>
         <td>

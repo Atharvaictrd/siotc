@@ -67,7 +67,7 @@ if(isset($_POST['search'])){
 // 		    echo "<meta http-equiv='refresh' content='0'>";
 // 		}
 // 	}
-if(isset($_POST['Submit_data']) && $_POST['Submit_data'] == 'Save information')
+if(isset($_POST['Submit_data']) && $_POST['Submit_data'] == 'Save information' && !empty($canAddFeesStructure))
 {
 
 	  
@@ -205,9 +205,8 @@ Session</b></div>
 </div>
 <?php if(isset($_POST['search']) && $_POST['search']=='View'){ 
     // print_r($stud_query);
-     if($stud_query== true){
-foreach ($stud_query->getResult() as $fees_collection) {
-}
+     if($stud_query && $stud_query->getNumRows() > 0){
+        $fees_collection = $stud_query->getRow();
 ?>
 
 <div class="col-xl-12" >
@@ -282,8 +281,12 @@ foreach ($stud_query->getResult() as $fees_collection) {
 					
 					<td><?php echo $row3->component; ?></td>
 					<td align="">
+					<?php if (!empty($canAddFeesStructure)): ?>
 					<input type="hidden" value="<?php echo $component; ?>" name="comp[]">
-							<input type="text" name="amount[<?= $component; ?>]" value = "<?php echo (number_format($amount,2))?$amount:$_POST['(fee_amount)'.$f_com_id];?>" style="text-align:right" onblur="javascript:fee_sub_total1(this);" onkeypress="return AllowNumeric(event)"></td>
+					<input type="text" name="amount[<?= $component; ?>]" value = "<?php echo (number_format($amount,2))?$amount:$_POST['(fee_amount)'.$f_com_id];?>" style="text-align:right" onblur="javascript:fee_sub_total1(this);" onkeypress="return AllowNumeric(event)">
+					<?php else: ?>
+					<?= number_format((float) $amount, 2); ?>
+					<?php endif; ?>
 					</td>
 					</tr>
    <?php } }?>
@@ -295,9 +298,11 @@ foreach ($stud_query->getResult() as $fees_collection) {
         	     <input type="hidden" value="<?php echo $row2->student_add_fee_id?>" name="ids" >
 							<b>Sub Total&nbsp;&nbsp;</b><input type="text" name="fees_sub_total" id="fees_sub_total"  value="<?php echo $Actual_Amount;?>" style="text-align:right" readonly > </td>
     </tr>
+    <?php if (!empty($canAddFeesStructure)): ?>
     <tr>
 		<td align="center"><input type="submit" name="Submit_data" value="Save information" style="height:30px; background-color: #0C6; width:150px; font:'Comic Sans MS', cursive; size:100px; border-radius: 20px;" /></td>
 			</tr>
+    <?php endif; ?>
 </tbody>
 </table>
 </form>

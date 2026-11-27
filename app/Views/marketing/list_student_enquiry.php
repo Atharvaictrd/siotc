@@ -92,8 +92,10 @@ Enquired Student Name</b></div>
 <div class="form-group row">
 <label class="col-lg-4 col-form-label form-label">&nbsp;</label>
 <div class="col-lg-6">
+<?php if (!empty($canAddListStudentEnquiry)): ?>
 <input type="submit" name="select_type" class="btn btn-primary" value="Search">
 <button type="reset" class="btn btn-primary">Cancel</button>
+<?php endif; ?>
 </div>
 </div>
 </form>
@@ -179,11 +181,11 @@ $s=count($source);
 <td><?= $row['category']; ?></td>
 <td><?= $row8->school_name; ?> </td>
 <td><?= $row['reference_details']; ?></td>
-<td><a title="Remove" href="<?=base_url();?>delete_enquiry/<?= $row['id']; ?>"  
+<td><?php if (!empty($canDeleteListStudentEnquiry)): ?><a title="Remove" href="<?= base_url('delete_list_student_enquiry/' . $row['enquiry_no']); ?>"
               onclick="if (confirm('Are you sure You want to delete.?')){return true;}else{event.stopPropagation(); event.preventDefault();};" 
               >
               <img src="https://siotc.eduwings.in/public/record_drop.png" height="12" width="12">
-              </a></td>
+              </a><?php endif; ?></td>
 </tr>
 <?php endforeach; ?>
 </tbody>

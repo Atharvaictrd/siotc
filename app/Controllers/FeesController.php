@@ -120,6 +120,12 @@ return redirect()->to(base_url(route_to('fees_fees')) )->with('success', 'Data I
 	}
 	public function fees_fees()
 	{
+	    $permissions = new \App\Libraries\PermissionService($this->db);
+	    $data['canAddFeesCollection'] = $permissions->hasPermission(
+	        'fees_collection',
+	        'add',
+	        session()->get('adminloggedid')
+	    );
 	    
 	    $fee_search_key=array();
 
@@ -167,6 +173,12 @@ if(!empty($reg_no)){
 	    return view('acedemic/print_late_slip');
 	}
 	public function collect_other_fee(){
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        $data['canAddOtherFees'] = $permissions->hasPermission(
+            'collect_other_fees',
+            'add',
+            session()->get('adminloggedid')
+        );
 	      $fee_search_key=array();
 // $from_Date=$this->request->getVar('from_Date');
 // if(!empty($from_Date)){
@@ -210,6 +222,16 @@ if(!empty($reg_no)){
 	       return view('acedemic/collect_other_fee',$data);
 	}
 	public function insert_other_fees(){
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        if (!$permissions->hasPermission(
+            'collect_other_fees',
+            'add',
+            session()->get('adminloggedid')
+        )) {
+            return redirect()->to(base_url(route_to('collect_other_fee')))
+                ->with('error', 'You do not have permission to add other fees.');
+        }
+
 	     $db = \Config\Database::connect();
 	    $AdmissionModel = new AdmissionModel();
 	    $student_admission_id=$this->request->getVar('student_admission_id');
@@ -248,6 +270,12 @@ return redirect()->to(base_url(route_to('collect_other_fee')) )->with('success',
 		}
 	}
 	public function fees_management(){
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        $data['canAddManagementConcession'] = $permissions->hasPermission(
+            'management_concession',
+            'add',
+            session()->get('adminloggedid')
+        );
 	     $fee_search_key=array();
 // $from_Date=$this->request->getVar('from_Date');
 // if(!empty($from_Date)){
@@ -292,6 +320,16 @@ if(!empty($reg_no)){
 	}
 	
 	public function insert_management(){
+        $permissions = new \App\Libraries\PermissionService($this->db);
+        if (!$permissions->hasPermission(
+            'management_concession',
+            'add',
+            session()->get('adminloggedid')
+        )) {
+            return redirect()->to(base_url(route_to('fees_management')))
+                ->with('error', 'You do not have permission to add management concession.');
+        }
+
 	     $db = \Config\Database::connect();
 	    $AdmissionModel = new AdmissionModel();
 	    $student_admission_id=$this->request->getVar('student_admission_id');

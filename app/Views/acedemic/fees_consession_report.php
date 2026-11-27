@@ -153,8 +153,6 @@ $fees_data_query =  $db->query("select *from  management_consession where sessio
 	 		 </tr>
 	 		 <?php
 			 
-			 $total_actual_scholarship = $total_actual_scholarship+$student_detail->actual_scholarship;
-			 $total_rec_scholarship=$total_rec_scholarship+$paid_scholarship;
 			 }
 			 ?>
 			 <tr>

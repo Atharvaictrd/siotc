@@ -9,8 +9,11 @@ use CodeIgniter\HTTP\ResponseInterface;
 class ModuleViewPermissionFilter implements FilterInterface
 {
     private const ACTION_ROUTE_PERMISSIONS = [
+        'student_enquiry' => ['student_enquiry', 'view'],
+        'list_student_enquiry' => ['list_student_enquiry', 'view'],
         'create_enquiry' => ['student_enquiry', 'add'],
-        'delete_enquiry' => ['list_student_enquiry', 'delete'],
+        'delete_enquiry' => ['student_enquiry', 'delete'],
+        'delete_list_student_enquiry' => ['list_student_enquiry', 'delete'],
         'create_prospect' => ['prospectus', 'add'],
         'delete_prospect' => ['prospectus', 'delete'],
         'create_prospect_enquired' => ['prospectus_enquired', 'add'],
@@ -27,9 +30,11 @@ class ModuleViewPermissionFilter implements FilterInterface
         'delete_fees' => ['fees_report', 'delete'],
         'delete_bus_fees' => ['fees_report', 'delete'],
         'delete_management' => ['fees_report', 'delete'],
-        'insert_other_fees' => ['fees_report', 'add'],
+        'insert_other_fees' => ['collect_other_fees', 'add'],
+        'fees_report/insert_management' => ['management_concession', 'add'],
+        'fees_report/change_fee_structure' => ['change_student_fees_structure', 'add'],
         'save_new_keyword' => ['master', 'add'],
-        'fees_report/scholarship/togglestatus' => ['fees_report', 'edit'],
+        'fees_report/scholarship/togglestatus' => ['scholarship_section', 'edit'],
     ];
 
     public function before(RequestInterface $request, $arguments = null)
